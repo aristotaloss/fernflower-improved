@@ -103,11 +103,28 @@ public class IfExprent extends Exprent {
 		if (expr1.type == EXPRENT_CONST) {
 			fexpr.replaceExprent(expr1, expr2.copy());
 			fexpr.replaceExprent(expr2, expr1.copy());
+			fexpr.setFuncType(reverseComp(fexpr.getFuncType()));
 			condition = fexpr.copy();
+
 		}
 		TextBuffer s = condition.toJava(indent, tracer).enclose("if(", ")");
 		System.out.println(s);
 		return s;
+	}
+
+	private int reverseComp(int funcType) {
+		switch (funcType) {
+			case FunctionExprent.FUNCTION_LT:
+				return FunctionExprent.FUNCTION_GT;
+			case FunctionExprent.FUNCTION_GT:
+				return FunctionExprent.FUNCTION_LT;
+			case FunctionExprent.FUNCTION_GE:
+				return FunctionExprent.FUNCTION_LE;
+			case FunctionExprent.FUNCTION_LE:
+				return FunctionExprent.FUNCTION_GE;
+			default:
+				return funcType;
+		}
 	}
 
 	@Override

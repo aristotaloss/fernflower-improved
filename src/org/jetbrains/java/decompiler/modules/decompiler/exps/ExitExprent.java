@@ -27,7 +27,6 @@ import org.jetbrains.java.decompiler.struct.attr.StructExceptionsAttribute;
 import org.jetbrains.java.decompiler.struct.gen.VarType;
 import org.jetbrains.java.decompiler.struct.match.MatchEngine;
 import org.jetbrains.java.decompiler.struct.match.MatchNode;
-import org.jetbrains.java.decompiler.struct.match.IMatchable.MatchProperties;
 import org.jetbrains.java.decompiler.util.InterpreterUtil;
 
 import java.util.ArrayList;
@@ -127,10 +126,12 @@ public class ExitExprent extends Exprent {
   }
 
   @Override
-  public void replaceExprent(Exprent oldExpr, Exprent newExpr) {
+  public boolean replaceExprent(Exprent oldExpr, Exprent newExpr) {
     if (oldExpr == value) {
       value = newExpr;
+      return true;
     }
+    return false;
   }
 
   @Override

@@ -416,12 +416,13 @@ public class FunctionExprent extends Exprent {
 		if (funcType >= FUNCTION_EQ) {
 			Exprent expr1 = lstOperands.get(0);
 			Exprent expr2 = lstOperands.get(1);
-			if (expr1.type == EXPRENT_CONST) {
+			if (expr1.getExprType() !=  VarType.VARTYPE_STRING && expr1.type == EXPRENT_CONST) {
 				lstOperands.set(0, expr2);
 				lstOperands.set(1, expr1);
 				setFuncType(IfExprent.reverseComp(getFuncType()));
 			}
-			return wrapOperandString(lstOperands.get(0), false, indent, tracer).append(OPERATORS[funcType - FUNCTION_EQ + 11]).append(wrapOperandString(lstOperands.get(1), true, indent, tracer));
+			TextBuffer b = wrapOperandString(lstOperands.get(0), false, indent, tracer).append(OPERATORS[funcType - FUNCTION_EQ + 11]).append(wrapOperandString(lstOperands.get(1), true, indent, tracer));
+			return b;
 		}
 
 		switch (funcType) {

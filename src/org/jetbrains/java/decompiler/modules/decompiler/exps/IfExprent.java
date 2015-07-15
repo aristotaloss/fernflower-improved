@@ -96,42 +96,10 @@ public class IfExprent extends Exprent {
 	@Override
 	public TextBuffer toJava(int indent, BytecodeMappingTracer tracer) {
 		tracer.addMapping(bytecode);
-
-		FunctionExprent fexpr = (FunctionExprent) condition.copy();
-		Exprent expr1 = fexpr.getLstOperands().get(0);
-		Exprent expr2 = fexpr.getLstOperands().get(1);
-
-		if (expr1.type == EXPRENT_CONST) {
-			fexpr.replaceExprent(expr1, expr2.copy());
-			fexpr.replaceExprent(expr2, expr1.copy());
-			fexpr.setFuncType(reverseComp(fexpr.getFuncType()));
-			condition = fexpr.copy();
-		}
-		if (expr1.type == EXPRENT_FUNCTION) {
-			for (int i = 0; i < fexpr.getLstOperands().size(); i++) {
-				expr1 = fexpr.getLstOperands().get(i);
-				if (expr1.type == EXPRENT_FUNCTION) {
-					FunctionExprent fex = (FunctionExprent) expr1.copy();
-					Exprent nExpr1 = fex.getLstOperands().get(0);
-					Exprent nExpr2 = fex.getLstOperands().get(1);
-					if (nExpr1.type == EXPRENT_CONST) {
-						fex.replaceExprent(nExpr1, nExpr2.copy());
-						fex.replaceExprent(nExpr2, nExpr1.copy());
-
-						fex.setFuncType(reverseComp(fex.getFuncType()));
-						fexpr.replaceExprent(expr1, fex);
-
-						condition = fexpr.copy();
-					}
-				}
-			}
-		}
-
-		TextBuffer s = condition.toJava(indent, tracer).enclose("if(", ")");
-		return s;
+		return condition.toJava(indent, tracer).enclose("if(", ")");
 	}
 
-	private int reverseComp(int funcType) {
+	public static int reverseComp(int funcType) {
 		switch (funcType) {
 			case FunctionExprent.FUNCTION_LT:
 				return FunctionExprent.FUNCTION_GT;

@@ -98,25 +98,16 @@ public class IfExprent extends Exprent {
 		tracer.addMapping(bytecode);
 
 		FunctionExprent fexpr = (FunctionExprent) condition.copy();
-
 		Exprent expr1 = fexpr.getLstOperands().get(0);
 		Exprent expr2 = fexpr.getLstOperands().get(1);
-
-		if (expr1.type == Exprent.EXPRENT_CONST) {
-			expr2 = expr1;
-			expr1 = fexpr.getLstOperands().get(1);
-			fexpr.getLstOperands().set(0, expr2);
-			fexpr.getLstOperands().set(1, expr1);
-			System.out.println("Ello puppet");
-			System.out.println(fexpr.containsExprent(expr1));
-			System.err.println(fexpr.replaceExprent(expr1, expr2));
-			System.out.println(fexpr.containsExprent(expr1));
-			System.out.println(condition.containsExprent(condition));
-			condition.replaceExprent(condition, fexpr);
-			System.out.println(condition.containsExprent(condition));
+		if (expr1.type == EXPRENT_CONST) {
+			fexpr.replaceExprent(expr1, expr2.copy());
+			fexpr.replaceExprent(expr2, expr1.copy());
+			condition = fexpr.copy();
 		}
-
-		return condition.toJava(indent, tracer).enclose("if(", ")");
+		TextBuffer s = condition.toJava(indent, tracer).enclose("if(", ")");
+		System.out.println(s);
+		return s;
 	}
 
 	@Override

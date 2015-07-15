@@ -399,6 +399,7 @@ public class FunctionExprent extends Exprent {
 		for (int i = 0; i < lstOperands.size(); i++) {
 			if (oldExpr == lstOperands.get(i)) {
 				lstOperands.set(i, newExpr);
+				b = true;
 			} else {
 				b = false;
 			}

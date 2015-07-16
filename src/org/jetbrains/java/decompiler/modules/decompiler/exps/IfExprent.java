@@ -96,36 +96,29 @@ public class IfExprent extends Exprent {
 	@Override
 	public TextBuffer toJava(int indent, BytecodeMappingTracer tracer) {
 		tracer.addMapping(bytecode);
-
-		FunctionExprent fexpr = (FunctionExprent) condition.copy();
-
-		Exprent expr1 = fexpr.getLstOperands().get(0);
-		Exprent expr2 = fexpr.getLstOperands().get(1);
-
-		if (expr1.type == Exprent.EXPRENT_CONST) {
-			expr2 = expr1;
-			expr1 = fexpr.getLstOperands().get(1);
-			fexpr.getLstOperands().set(0, expr2);
-			fexpr.getLstOperands().set(1, expr1);
-			System.out.println("Ello puppet");
-			System.out.println(fexpr.containsExprent(expr1));
-			System.err.println(fexpr.replaceExprent(expr1, expr2));
-			System.out.println(fexpr.containsExprent(expr1));
-			System.out.println(condition.containsExprent(condition));
-			condition.replaceExprent(condition, fexpr);
-			System.out.println(condition.containsExprent(condition));
-		}
-
 		return condition.toJava(indent, tracer).enclose("if(", ")");
 	}
 
+	public static int reverseComp(int funcType) {
+		switch (funcType) {
+			case FunctionExprent.FUNCTION_LT:
+				return FunctionExprent.FUNCTION_GT;
+			case FunctionExprent.FUNCTION_GT:
+				return FunctionExprent.FUNCTION_LT;
+			case FunctionExprent.FUNCTION_GE:
+				return FunctionExprent.FUNCTION_LE;
+			case FunctionExprent.FUNCTION_LE:
+				return FunctionExprent.FUNCTION_GE;
+			default:
+				return funcType;
+		}
+	}
+
 	@Override
-	public boolean replaceExprent(Exprent oldExpr, Exprent newExpr) {
+	public void replaceExprent(Exprent oldExpr, Exprent newExpr) {
 		if (oldExpr == condition) {
 			condition = newExpr;
-			return true;
 		}
-		return false;
 	}
 
 	@Override

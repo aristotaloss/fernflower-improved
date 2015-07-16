@@ -173,7 +173,10 @@ public class FunctionExprent extends Exprent {
 			throw new RuntimeException("no direct instantiation possible");
 		} else {
 			Exprent expr = stack.pop();
-			lstOperands.add(stack.pop());
+			Exprent expr2 = stack.pop();
+
+
+			lstOperands.add(expr2);
 			lstOperands.add(expr);
 		}
 	}
@@ -394,16 +397,12 @@ public class FunctionExprent extends Exprent {
 	}
 
 	@Override
-	public boolean replaceExprent(Exprent oldExpr, Exprent newExpr) {
-		boolean b = true;
+	public void replaceExprent(Exprent oldExpr, Exprent newExpr) {
 		for (int i = 0; i < lstOperands.size(); i++) {
 			if (oldExpr == lstOperands.get(i)) {
 				lstOperands.set(i, newExpr);
-			} else {
-				b = false;
 			}
 		}
-		return b;
 	}
 
 	@Override
@@ -415,7 +414,15 @@ public class FunctionExprent extends Exprent {
 		}
 
 		if (funcType >= FUNCTION_EQ) {
-			return wrapOperandString(lstOperands.get(0), false, indent, tracer).append(OPERATORS[funcType - FUNCTION_EQ + 11]).append(wrapOperandString(lstOperands.get(1), true, indent, tracer));
+			Exprent expr1 = lstOperands.get(0);
+			Exprent expr2 = lstOperands.get(1);
+			if (expr1.getExprType() != VarType.VARTYPE_STRING && expr1.type == EXPRENT_CONST) {
+				lstOperands.set(0, expr2);
+				lstOperands.set(1, expr1);
+				setFuncType(IfExprent.reverseComp(getFuncType()));
+			}
+			TextBuffer b = wrapOperandString(lstOperands.get(0), false, indent, tracer).append(OPERATORS[funcType - FUNCTION_EQ + 11]).append(wrapOperandString(lstOperands.get(1), true, indent, tracer));
+			return b;
 		}
 
 		switch (funcType) {
@@ -484,7 +491,6 @@ public class FunctionExprent extends Exprent {
 	private TextBuffer wrapOperandString(Exprent expr, boolean eq, int indent, BytecodeMappingTracer tracer) {
 		int myprec = getPrecedence();
 		int exprprec = expr.getPrecedence();
-
 		boolean parentheses = exprprec > myprec;
 		if (!parentheses && eq) {
 			parentheses = (exprprec == myprec);
@@ -515,7 +521,6 @@ public class FunctionExprent extends Exprent {
 				}
 			}
 		}
-
 		return VarType.VARTYPE_INT;
 	}
 

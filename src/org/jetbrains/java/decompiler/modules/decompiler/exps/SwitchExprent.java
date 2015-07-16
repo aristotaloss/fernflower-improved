@@ -27,98 +27,96 @@ import java.util.Set;
 
 public class SwitchExprent extends Exprent {
 
-	private Exprent value;
-	private List<List<ConstExprent>> caseValues = new ArrayList<List<ConstExprent>>();
+  private Exprent value;
+  private List<List<ConstExprent>> caseValues = new ArrayList<List<ConstExprent>>();
 
-	public SwitchExprent(Exprent value, Set<Integer> bytecodeOffsets) {
-		super(EXPRENT_SWITCH);
-		this.value = value;
+  public SwitchExprent(Exprent value, Set<Integer> bytecodeOffsets) {
+    super(EXPRENT_SWITCH);
+    this.value = value;
 
-		addBytecodeOffsets(bytecodeOffsets);
-	}
+    addBytecodeOffsets(bytecodeOffsets);
+  }
 
-	@Override
-	public Exprent copy() {
-		SwitchExprent swExpr = new SwitchExprent(value.copy(), bytecode);
+  @Override
+  public Exprent copy() {
+    SwitchExprent swExpr = new SwitchExprent(value.copy(), bytecode);
 
-		List<List<ConstExprent>> lstCaseValues = new ArrayList<List<ConstExprent>>();
-		for (List<ConstExprent> lst : caseValues) {
-			lstCaseValues.add(new ArrayList<ConstExprent>(lst));
-		}
-		swExpr.setCaseValues(lstCaseValues);
+    List<List<ConstExprent>> lstCaseValues = new ArrayList<List<ConstExprent>>();
+    for (List<ConstExprent> lst : caseValues) {
+      lstCaseValues.add(new ArrayList<ConstExprent>(lst));
+    }
+    swExpr.setCaseValues(lstCaseValues);
 
-		return swExpr;
-	}
+    return swExpr;
+  }
 
-	@Override
-	public VarType getExprType() {
-		return value.getExprType();
-	}
+  @Override
+  public VarType getExprType() {
+    return value.getExprType();
+  }
 
-	@Override
-	public CheckTypesResult checkExprTypeBounds() {
-		CheckTypesResult result = new CheckTypesResult();
+  @Override
+  public CheckTypesResult checkExprTypeBounds() {
+    CheckTypesResult result = new CheckTypesResult();
 
-		result.addMinTypeExprent(value, VarType.VARTYPE_BYTECHAR);
-		result.addMaxTypeExprent(value, VarType.VARTYPE_INT);
+    result.addMinTypeExprent(value, VarType.VARTYPE_BYTECHAR);
+    result.addMaxTypeExprent(value, VarType.VARTYPE_INT);
 
-		VarType valType = value.getExprType();
-		for (List<ConstExprent> lst : caseValues) {
-			for (ConstExprent expr : lst) {
-				if (expr != null) {
-					VarType caseType = expr.getExprType();
-					if (!caseType.equals(valType)) {
-						valType = VarType.getCommonSupertype(caseType, valType);
-						result.addMinTypeExprent(value, valType);
-					}
-				}
-			}
-		}
+    VarType valType = value.getExprType();
+    for (List<ConstExprent> lst : caseValues) {
+      for (ConstExprent expr : lst) {
+        if (expr != null) {
+          VarType caseType = expr.getExprType();
+          if (!caseType.equals(valType)) {
+            valType = VarType.getCommonSupertype(caseType, valType);
+            result.addMinTypeExprent(value, valType);
+          }
+        }
+      }
+    }
 
-		return result;
-	}
+    return result;
+  }
 
-	@Override
-	public List<Exprent> getAllExprents() {
-		List<Exprent> lst = new ArrayList<Exprent>();
-		lst.add(value);
-		return lst;
-	}
+  @Override
+  public List<Exprent> getAllExprents() {
+    List<Exprent> lst = new ArrayList<Exprent>();
+    lst.add(value);
+    return lst;
+  }
 
-	@Override
-	public TextBuffer toJava(int indent, BytecodeMappingTracer tracer) {
-		tracer.addMapping(bytecode);
-		return value.toJava(indent, tracer).enclose("switch(", ")");
-	}
+  @Override
+  public TextBuffer toJava(int indent, BytecodeMappingTracer tracer) {
+    tracer.addMapping(bytecode);
+    return value.toJava(indent, tracer).enclose("switch(", ")");
+  }
 
-	@Override
-	public boolean replaceExprent(Exprent oldExpr, Exprent newExpr) {
-		if (oldExpr == value) {
-			value = newExpr;
-			return true;
-		}
-		return false;
-	}
+  @Override
+  public void replaceExprent(Exprent oldExpr, Exprent newExpr) {
+    if (oldExpr == value) {
+      value = newExpr;
+    }
+  }
 
-	@Override
-	public boolean equals(Object o) {
-		if (o == this) {
-			return true;
-		}
+  @Override
+  public boolean equals(Object o) {
+    if (o == this) {
+      return true;
+    }
 
-		if (o == null || !(o instanceof SwitchExprent)) {
-			return false;
-		}
+    if (o == null || !(o instanceof SwitchExprent)) {
+      return false;
+    }
 
-		SwitchExprent sw = (SwitchExprent) o;
-		return InterpreterUtil.equalObjects(value, sw.getValue());
-	}
+    SwitchExprent sw = (SwitchExprent)o;
+    return InterpreterUtil.equalObjects(value, sw.getValue());
+  }
 
-	public Exprent getValue() {
-		return value;
-	}
+  public Exprent getValue() {
+    return value;
+  }
 
-	public void setCaseValues(List<List<ConstExprent>> caseValues) {
-		this.caseValues = caseValues;
-	}
+  public void setCaseValues(List<List<ConstExprent>> caseValues) {
+    this.caseValues = caseValues;
+  }
 }

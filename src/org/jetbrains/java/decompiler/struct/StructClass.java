@@ -16,6 +16,8 @@
 package org.jetbrains.java.decompiler.struct;
 
 import org.jetbrains.java.decompiler.code.CodeConstants;
+import org.jetbrains.java.decompiler.main.DecompilerContext;
+import org.jetbrains.java.decompiler.main.extern.IFernflowerPreferences;
 import org.jetbrains.java.decompiler.struct.consts.ConstantPool;
 import org.jetbrains.java.decompiler.struct.consts.PrimitiveConstant;
 import org.jetbrains.java.decompiler.struct.lazy.LazyLoader;
@@ -163,41 +165,49 @@ public class StructClass extends StructMember {
 	}
 
 	public VBStyleCollection<StructField, String> getFields() {
-		return fields;
-	}
-
-	public VBStyleCollection<StructField, String> getSortedFields() {
-		VBStyleCollection<StructField, String> sorted = new VBStyleCollection<StructField, String>();
-		
-		List<String> fieldOrder = FieldOrder.forClass(this);
-		if (fieldOrder == null) {
-			return fields;
-		}
-
-		List<StructField> unSorted = new ArrayList<StructField>();
-
-		for (StructField s : fields) {
-			String key = InterpreterUtil.makeUniqueKey(s.getName(), s.getDescriptor());
-
-			if (!sorted.containsKey(key) && !fieldOrder.contains(s.getName())) {
-				sorted.addWithKey(s, key);
-			} else {
-				unSorted.add(s);
+		if (DecompilerContext.getOption(IFernflowerPreferences.FIELD_DECLARATION_ORDER)) {
+			//TODO improve the logic behind this?
+			List<String> fieldOrder = FieldOrder.forClass(this);
+			if (fieldOrder == null) {
+				return fields;
 			}
-		}
 
-		for (String name : fieldOrder) {
-			for (StructField s : unSorted) {
+			VBStyleCollection<StructField, String> sorted = new VBStyleCollection<StructField, String>();
+
+			List<StructField> unSorted = new ArrayList<StructField>();
+
+			/**
+			 * First we add the original fields to the new collection as long
+			 * as they are not in the fieldOrder list, otherwise we add them to the to-be sorted list.
+			 */
+			for (StructField s : fields) {
 				String key = InterpreterUtil.makeUniqueKey(s.getName(), s.getDescriptor());
 
-				if (!sorted.containsKey(key) && name.equalsIgnoreCase(s.getName())) {
+				if (!sorted.containsKey(key) && !fieldOrder.contains(s.getName())) {
 					sorted.addWithKey(s, key);
-					break;
+				} else {
+					unSorted.add(s);
 				}
 			}
-		}
 
-		return sorted;
+			/**
+			 * Then we loop through and sort the remaining fields in the order they appear
+			 * in the fieldOrder list.
+			 */
+			for (String name : fieldOrder) {
+				for (StructField s : unSorted) {
+					String key = InterpreterUtil.makeUniqueKey(s.getName(), s.getDescriptor());
+
+					if (!sorted.containsKey(key) && name.equals(s.getName())) {
+						sorted.addWithKey(s, key);
+						break;
+					}
+				}
+			}
+
+			return sorted;
+		}
+		return fields;
 	}
 
 	public boolean isOwn() {

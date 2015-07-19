@@ -490,7 +490,7 @@ public class ClassWriter {
 
 			dummy_tracer.incrementCurrentSourceLine(buffer.countLines(start_class_def));
 
-			for (StructField field : cl.getSortedFields()) {
+			for (StructField field : cl.getFields()) {
 				boolean hide = field.isSynthetic() && DecompilerContext.getOption(IFernflowerPreferences.REMOVE_SYNTHETIC) || wrapper.getHiddenMembers().contains(InterpreterUtil.makeUniqueKey(field.getName(), field.getDescriptor()));
 				if (hide) {
 					continue;

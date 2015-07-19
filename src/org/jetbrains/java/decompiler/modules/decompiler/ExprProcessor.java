@@ -48,8 +48,6 @@ public class ExprProcessor implements CodeConstants {
 	public static final String UNKNOWN_TYPE_STRING = "<unknown>";
 	public static final String NULL_TYPE_STRING = "<null>";
 
-	public static final Map<String, List<String>> fieldOrder = new HashMap<>();
-
 	private static final HashMap<Integer, Integer> mapConsts = new HashMap<Integer, Integer>();
 	private static final VarType[] consts = new VarType[]{
 			VarType.VARTYPE_INT, VarType.VARTYPE_FLOAT, VarType.VARTYPE_LONG, VarType.VARTYPE_DOUBLE, VarType.VARTYPE_CLASS, VarType.VARTYPE_STRING

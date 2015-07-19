@@ -12,12 +12,12 @@ import java.util.Map;
 /**
  * Created by Jonathan on 7/19/2015.
  */
-public final class FieldOrder extends HashMap<String, ArrayList<String>> {
+public final class FieldOrder {
 
 	private static Map<String, List<String>> fieldOrders = new HashMap<String, List<String>>();
 
 	public static void bindTo(StructClass clazz, Exprent exprent) {
-		List<String> strings = fieldOrders.getOrDefault(clazz.qualifiedName, new ArrayList<>());
+		List<String> strings = fieldOrders.getOrDefault(clazz.qualifiedName, new ArrayList<String>());
 
 		String buff = exprent.toJava(0, new BytecodeMappingTracer()).toString();
 		buff = buff.substring(buff.indexOf(".") + 1, buff.length());

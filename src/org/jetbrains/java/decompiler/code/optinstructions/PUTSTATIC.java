@@ -22,12 +22,12 @@ import java.io.IOException;
 
 public class PUTSTATIC extends Instruction {
 
-  public void writeToStream(DataOutputStream out, int offset) throws IOException {
-    out.writeByte(opc_putstatic);
-    out.writeShort(getOperand(0));
-  }
+	public void writeToStream(DataOutputStream out, int offset) throws IOException {
+		out.writeByte(opc_putstatic);
+		out.writeShort(getOperand(0));
+	}
 
-  public int length() {
-    return 3;
-  }
+	public int length() {
+		return 3;
+	}
 }

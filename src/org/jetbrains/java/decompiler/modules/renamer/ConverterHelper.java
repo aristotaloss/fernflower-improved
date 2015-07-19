@@ -23,72 +23,65 @@ import java.util.Set;
 
 public class ConverterHelper implements IIdentifierRenamer {
 
-  private static final Set<String> KEYWORDS = new HashSet<String>(Arrays.asList(
-    "abstract", "do", "if", "package", "synchronized", "boolean", "double", "implements", "private", "this", "break", "else", "import",
-    "protected", "throw", "byte", "extends", "instanceof", "public", "throws", "case", "false", "int", "return", "transient", "catch",
-    "final", "interface", "short", "true", "char", "finally", "long", "static", "try", "class", "float", "native", "strictfp", "void",
-    "const", "for", "new", "super", "volatile", "continue", "goto", "null", "switch", "while", "default", "assert", "enum"));
+	private static final Set<String> KEYWORDS = new HashSet<String>(Arrays.asList("abstract", "do", "if", "package", "synchronized", "boolean", "double", "implements", "private", "this", "break", "else", "import", "protected", "throw", "byte", "extends", "instanceof", "public", "throws", "case", "false", "int", "return", "transient", "catch", "final", "interface", "short", "true", "char", "finally", "long", "static", "try", "class", "float", "native", "strictfp", "void", "const", "for", "new", "super", "volatile", "continue", "goto", "null", "switch", "while", "default", "assert", "enum"));
+	private final Set<String> setNonStandardClassNames = new HashSet<String>();
+	private int classCounter = 0;
+	private int fieldCounter = 0;
+	private int methodCounter = 0;
 
-  private int classCounter = 0;
-  private int fieldCounter = 0;
-  private int methodCounter = 0;
-  private final Set<String> setNonStandardClassNames = new HashSet<String>();
+	public static String getSimpleClassName(String fullName) {
+		return fullName.substring(fullName.lastIndexOf('/') + 1);
+	}
 
-  @Override
-  public boolean toBeRenamed(Type elementType, String className, String element, String descriptor) {
-    String value = elementType == Type.ELEMENT_CLASS ? className : element;
-    return value == null || value.length() == 0 || value.length() <= 2 || KEYWORDS.contains(value) || Character.isDigit(value.charAt(0));
-  }
+	public static String replaceSimpleClassName(String fullName, String newName) {
+		return fullName.substring(0, fullName.lastIndexOf('/') + 1) + newName;
+	}
 
-  // TODO: consider possible conflicts with not renamed classes, fields and methods!
-  // We should get all relevant information here.
-  @Override
-  public String getNextClassName(String fullName, String shortName) {
+	@Override
+	public boolean toBeRenamed(Type elementType, String className, String element, String descriptor) {
+		String value = elementType == Type.ELEMENT_CLASS ? className : element;
+		return value == null || value.length() == 0 || value.length() <= 2 || KEYWORDS.contains(value) || Character.isDigit(value.charAt(0));
+	}
 
-    if (shortName == null) {
-      return "class_" + (classCounter++);
-    }
+	// TODO: consider possible conflicts with not renamed classes, fields and methods!
+	// We should get all relevant information here.
+	@Override
+	public String getNextClassName(String fullName, String shortName) {
 
-    int index = 0;
-    while (Character.isDigit(shortName.charAt(index))) {
-      index++;
-    }
+		if (shortName == null) {
+			return "class_" + (classCounter++);
+		}
 
-    if (index == 0 || index == shortName.length()) {
-      return "class_" + (classCounter++);
-    }
-    else {
-      String name = shortName.substring(index);
+		int index = 0;
+		while (Character.isDigit(shortName.charAt(index))) {
+			index++;
+		}
 
-      if (setNonStandardClassNames.contains(name)) {
-        return "Inner" + name + "_" + (classCounter++);
-      }
-      else {
-        setNonStandardClassNames.add(name);
-        return "Inner" + name;
-      }
-    }
-  }
+		if (index == 0 || index == shortName.length()) {
+			return "class_" + (classCounter++);
+		} else {
+			String name = shortName.substring(index);
 
-  @Override
-  public String getNextFieldName(String className, String field, String descriptor) {
-    return "field_" + (fieldCounter++);
-  }
+			if (setNonStandardClassNames.contains(name)) {
+				return "Inner" + name + "_" + (classCounter++);
+			} else {
+				setNonStandardClassNames.add(name);
+				return "Inner" + name;
+			}
+		}
+	}
 
-  @Override
-  public String getNextMethodName(String className, String method, String descriptor) {
-    return "method_" + (methodCounter++);
-  }
+	// *****************************************************************************
+	// static methods
+	// *****************************************************************************
 
-  // *****************************************************************************
-  // static methods
-  // *****************************************************************************
+	@Override
+	public String getNextFieldName(String className, String field, String descriptor) {
+		return "field_" + (fieldCounter++);
+	}
 
-  public static String getSimpleClassName(String fullName) {
-    return fullName.substring(fullName.lastIndexOf('/') + 1);
-  }
-
-  public static String replaceSimpleClassName(String fullName, String newName) {
-    return fullName.substring(0, fullName.lastIndexOf('/') + 1) + newName;
-  }
+	@Override
+	public String getNextMethodName(String className, String method, String descriptor) {
+		return "method_" + (methodCounter++);
+	}
 }

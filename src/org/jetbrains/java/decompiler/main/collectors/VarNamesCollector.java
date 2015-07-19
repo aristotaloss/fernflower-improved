@@ -20,27 +20,28 @@ import java.util.Set;
 
 public class VarNamesCollector {
 
-  private final Set<String> usedNames = new HashSet<String>();
+	private final Set<String> usedNames = new HashSet<String>();
 
-  public VarNamesCollector() { }
+	public VarNamesCollector() {
+	}
 
-  public VarNamesCollector(Set<String> setNames) {
-    usedNames.addAll(setNames);
-  }
+	public VarNamesCollector(Set<String> setNames) {
+		usedNames.addAll(setNames);
+	}
 
-  public void addName(String value) {
-    usedNames.add(value);
-  }
+	public void addName(String value) {
+		usedNames.add(value);
+	}
 
-  public String getFreeName(int index) {
-    return getFreeName("var" + index);
-  }
+	public String getFreeName(int index) {
+		return getFreeName("var" + index);
+	}
 
-  public String getFreeName(String proposition) {
-    while (usedNames.contains(proposition)) {
-      proposition += "x";
-    }
-    usedNames.add(proposition);
-    return proposition;
-  }
+	public String getFreeName(String proposition) {
+		while (usedNames.contains(proposition)) {
+			proposition += "x";
+		}
+		usedNames.add(proposition);
+		return proposition;
+	}
 }

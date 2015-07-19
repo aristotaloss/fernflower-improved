@@ -108,22 +108,22 @@ public class VarExprent extends Exprent {
 			}
 			buffer.append(name == null ? ("var" + index + (version == 0 ? "" : "_" + version)) : name);
 
-			if (name.equals("i_20_")) {
+			if (name != null && name.equals("i_20_")) {
 				//exception.printStackTrace();
 			}
 		}
-
-		//System.out.println(buffer + ", " + index + ", " + version);
 
 		return buffer;
 	}
 
 	@Override
 	public boolean equals(Object o) {
-		if (o == this)
+		if (o == this) {
 			return true;
-		if (o == null || !(o instanceof VarExprent))
+		}
+		if (o == null || !(o instanceof VarExprent)) {
 			return false;
+		}
 
 		VarExprent ve = (VarExprent) o;
 		return index == ve.getIndex() &&

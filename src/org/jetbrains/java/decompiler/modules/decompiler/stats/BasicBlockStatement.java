@@ -27,71 +27,69 @@ import org.jetbrains.java.decompiler.modules.decompiler.ExprProcessor;
 
 public class BasicBlockStatement extends Statement {
 
-  // *****************************************************************************
-  // private fields
-  // *****************************************************************************
+	// *****************************************************************************
+	// private fields
+	// *****************************************************************************
 
-  private final BasicBlock block;
+	private final BasicBlock block;
 
-  // *****************************************************************************
-  // constructors
-  // *****************************************************************************
+	// *****************************************************************************
+	// constructors
+	// *****************************************************************************
 
-  public BasicBlockStatement(BasicBlock block) {
+	public BasicBlockStatement(BasicBlock block) {
 
-    type = Statement.TYPE_BASICBLOCK;
+		type = Statement.TYPE_BASICBLOCK;
 
-    this.block = block;
+		this.block = block;
 
-    id = block.id;
-    CounterContainer coun = DecompilerContext.getCounterContainer();
-    if (id >= coun.getCounter(CounterContainer.STATEMENT_COUNTER)) {
-      coun.setCounter(CounterContainer.STATEMENT_COUNTER, id + 1);
-    }
+		id = block.id;
+		CounterContainer coun = DecompilerContext.getCounterContainer();
+		if (id >= coun.getCounter(CounterContainer.STATEMENT_COUNTER)) {
+			coun.setCounter(CounterContainer.STATEMENT_COUNTER, id + 1);
+		}
 
-    Instruction instr = block.getLastInstruction();
-    if (instr != null) {
-      if (instr.group == CodeConstants.GROUP_JUMP && instr.opcode != CodeConstants.opc_goto) {
-        lastBasicType = LASTBASICTYPE_IF;
-      }
-      else if (instr.group == CodeConstants.GROUP_SWITCH) {
-        lastBasicType = LASTBASICTYPE_SWITCH;
-      }
-    }
+		Instruction instr = block.getLastInstruction();
+		if (instr != null) {
+			if (instr.group == CodeConstants.GROUP_JUMP && instr.opcode != CodeConstants.opc_goto) {
+				lastBasicType = LASTBASICTYPE_IF;
+			} else if (instr.group == CodeConstants.GROUP_SWITCH) {
+				lastBasicType = LASTBASICTYPE_SWITCH;
+			}
+		}
 
-    // monitorenter and monitorexits
-    buildMonitorFlags();
-  }
+		// monitorenter and monitorexits
+		buildMonitorFlags();
+	}
 
-  // *****************************************************************************
-  // public methods
-  // *****************************************************************************
+	// *****************************************************************************
+	// public methods
+	// *****************************************************************************
 
-  public TextBuffer toJava(int indent, BytecodeMappingTracer tracer) {
-    return ExprProcessor.listToJava(varDefinitions, indent, tracer).append(ExprProcessor.listToJava(exprents, indent, tracer));
-  }
+	public TextBuffer toJava(int indent, BytecodeMappingTracer tracer) {
+		return ExprProcessor.listToJava(varDefinitions, indent, tracer).append(ExprProcessor.listToJava(exprents, indent, tracer));
+	}
 
-  public Statement getSimpleCopy() {
+	public Statement getSimpleCopy() {
 
-    BasicBlock newblock = new BasicBlock(
-      DecompilerContext.getCounterContainer().getCounterAndIncrement(CounterContainer.STATEMENT_COUNTER));
+		BasicBlock newblock = new BasicBlock(DecompilerContext.getCounterContainer().getCounterAndIncrement(CounterContainer.STATEMENT_COUNTER));
 
-    SimpleInstructionSequence seq = new SimpleInstructionSequence();
-    for (int i = 0; i < block.getSeq().length(); i++) {
-      seq.addInstruction(block.getSeq().getInstr(i).clone(), -1);
-    }
+		SimpleInstructionSequence seq = new SimpleInstructionSequence();
+		for (int i = 0; i < block.getSeq().length(); i++) {
+			seq.addInstruction(block.getSeq().getInstr(i).clone(), -1);
+		}
 
-    newblock.setSeq(seq);
+		newblock.setSeq(seq);
 
-    return new BasicBlockStatement(newblock);
-  }
+		return new BasicBlockStatement(newblock);
+	}
 
 
-  // *****************************************************************************
-  // getter and setter methods
-  // *****************************************************************************
+	// *****************************************************************************
+	// getter and setter methods
+	// *****************************************************************************
 
-  public BasicBlock getBlock() {
-    return block;
-  }
+	public BasicBlock getBlock() {
+		return block;
+	}
 }

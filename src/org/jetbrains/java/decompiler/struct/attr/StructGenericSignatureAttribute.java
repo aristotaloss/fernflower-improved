@@ -21,15 +21,15 @@ import java.io.IOException;
 
 public class StructGenericSignatureAttribute extends StructGeneralAttribute {
 
-  private String signature;
+	private String signature;
 
-  @Override
-  public void initContent(ConstantPool pool) throws IOException {
-    int index = stream().readUnsignedShort();
-    signature = pool.getPrimitiveConstant(index).getString();
-  }
+	@Override
+	public void initContent(ConstantPool pool) throws IOException {
+		int index = stream().readUnsignedShort();
+		signature = pool.getPrimitiveConstant(index).getString();
+	}
 
-  public String getSignature() {
-    return signature;
-  }
+	public String getSignature() {
+		return signature;
+	}
 }

@@ -21,35 +21,35 @@ import java.io.IOException;
 
 public class DataInputFullStream extends DataInputStream {
 
-  public DataInputFullStream(byte[] bytes) {
-    super(new ByteArrayInputStream(bytes));
-  }
+	public DataInputFullStream(byte[] bytes) {
+		super(new ByteArrayInputStream(bytes));
+	}
 
-  public int readFull(byte[] b) throws IOException {
-    int length = b.length;
-    byte[] temp = new byte[length];
-    int pos = 0;
+	public int readFull(byte[] b) throws IOException {
+		int length = b.length;
+		byte[] temp = new byte[length];
+		int pos = 0;
 
-    int bytes_read;
-    while (true) {
-      bytes_read = read(temp, 0, length - pos);
-      if (bytes_read == -1) {
-        return -1;
-      }
+		int bytes_read;
+		while (true) {
+			bytes_read = read(temp, 0, length - pos);
+			if (bytes_read == -1) {
+				return -1;
+			}
 
-      System.arraycopy(temp, 0, b, pos, bytes_read);
-      pos += bytes_read;
-      if (pos == length) {
-        break;
-      }
-    }
+			System.arraycopy(temp, 0, b, pos, bytes_read);
+			pos += bytes_read;
+			if (pos == length) {
+				break;
+			}
+		}
 
-    return length;
-  }
+		return length;
+	}
 
-  public void discard(int n) throws IOException {
-    if (super.skip(n) != n) {
-      throw new IOException("Skip failed");
-    }
-  }
+	public void discard(int n) throws IOException {
+		if (super.skip(n) != n) {
+			throw new IOException("Skip failed");
+		}
+	}
 }

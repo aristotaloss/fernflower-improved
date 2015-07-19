@@ -14,38 +14,38 @@
  * limitations under the License.
  */
 
-public class TestInnerSignature<A,B,C> {
-  A a;
-  B b;
-  C c;
+public class TestInnerSignature<A, B, C> {
+	A a;
+	B b;
+	C c;
 
-  public TestInnerSignature(A a,B b,C c) {
-    this.a = a;
-    this.b = b;
-    this.c = c;
-  }
+	public TestInnerSignature(A a, B b, C c) {
+		this.a = a;
+		this.b = b;
+		this.c = c;
+	}
 
-  public class Inner {
-    A a;
-    B b;
-    C c;
+	public static class InnerStatic<A, B, C> {
+		A a;
+		B b;
+		C c;
 
-    public Inner(A a, B b, C c) {
-      this.a = a;
-      this.b = b;
-      this.c = c;
-    }
-  }
+		public InnerStatic(A a, B b, C c) {
+			this.a = a;
+			this.b = b;
+			this.c = c;
+		}
+	}
 
-  public static class InnerStatic<A,B,C> {
-    A a;
-    B b;
-    C c;
+	public class Inner {
+		A a;
+		B b;
+		C c;
 
-    public InnerStatic(A a, B b, C c) {
-      this.a = a;
-      this.b = b;
-      this.c = c;
-    }
-  }
+		public Inner(A a, B b, C c) {
+			this.a = a;
+			this.b = b;
+			this.c = c;
+		}
+	}
 }

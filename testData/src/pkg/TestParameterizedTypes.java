@@ -13,14 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package pkg;
 
 public abstract class TestParameterizedTypes<P> {
 
-  public abstract class Inner<I> { }
+	abstract Inner<String> getUnspecificInner();
 
-  abstract Inner<String> getUnspecificInner();
+	abstract TestParameterizedTypes<Number>.Inner<String> getSpecificInner();
 
-  abstract TestParameterizedTypes<Number>.Inner<String> getSpecificInner();
+	public abstract class Inner<I> {
+	}
 
 }

@@ -22,12 +22,12 @@ import java.io.IOException;
 
 public class GOTO_W extends JumpInstruction {
 
-  public void writeToStream(DataOutputStream out, int offset) throws IOException {
-    out.writeByte(opc_goto_w);
-    out.writeInt(getOperand(0));
-  }
+	public void writeToStream(DataOutputStream out, int offset) throws IOException {
+		out.writeByte(opc_goto_w);
+		out.writeInt(getOperand(0));
+	}
 
-  public int length() {
-    return 5;
-  }
+	public int length() {
+		return 5;
+	}
 }

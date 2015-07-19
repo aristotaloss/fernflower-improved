@@ -13,14 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package pkg;
 
 public class TestExtendsList {
-  static <T extends Comparable<? super T>> T m1(T t) {
-    return null;
-  }
+	static <T extends Comparable<? super T>> T m1(T t) {
+		return null;
+	}
 
-  static <T extends Object & Comparable<? super T>> T m2(T t) {
-    return null;
-  }
+	static <T extends Object & Comparable<? super T>> T m2(T t) {
+		return null;
+	}
 }

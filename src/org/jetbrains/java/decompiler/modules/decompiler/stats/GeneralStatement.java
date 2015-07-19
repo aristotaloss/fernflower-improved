@@ -24,48 +24,48 @@ import java.util.HashSet;
 
 public class GeneralStatement extends Statement {
 
-  // *****************************************************************************
-  // constructors
-  // *****************************************************************************
+	// *****************************************************************************
+	// constructors
+	// *****************************************************************************
 
-  private GeneralStatement() {
-    type = Statement.TYPE_GENERAL;
-  }
+	private GeneralStatement() {
+		type = Statement.TYPE_GENERAL;
+	}
 
-  public GeneralStatement(Statement head, Collection<Statement> statements, Statement post) {
+	public GeneralStatement(Statement head, Collection<Statement> statements, Statement post) {
 
-    this();
+		this();
 
-    first = head;
-    stats.addWithKey(head, head.id);
+		first = head;
+		stats.addWithKey(head, head.id);
 
-    HashSet<Statement> set = new HashSet<Statement>(statements);
-    set.remove(head);
+		HashSet<Statement> set = new HashSet<Statement>(statements);
+		set.remove(head);
 
-    for (Statement st : set) {
-      stats.addWithKey(st, st.id);
-    }
+		for (Statement st : set) {
+			stats.addWithKey(st, st.id);
+		}
 
-    this.post = post;
-  }
+		this.post = post;
+	}
 
-  // *****************************************************************************
-  // public methods
-  // *****************************************************************************
+	// *****************************************************************************
+	// public methods
+	// *****************************************************************************
 
-  public TextBuffer toJava(int indent, BytecodeMappingTracer tracer) {
-    TextBuffer buf = new TextBuffer();
+	public TextBuffer toJava(int indent, BytecodeMappingTracer tracer) {
+		TextBuffer buf = new TextBuffer();
 
-    if (isLabeled()) {
-      buf.appendIndent(indent).append("label").append(this.id.toString()).append(":").appendLineSeparator();
-    }
+		if (isLabeled()) {
+			buf.appendIndent(indent).append("label").append(this.id.toString()).append(":").appendLineSeparator();
+		}
 
-    buf.appendIndent(indent).append("abstract statement {").appendLineSeparator();
-    for (Statement stat : stats) {
-      buf.append(stat.toJava(indent + 1, tracer));
-    }
-    buf.appendIndent(indent).append("}");
+		buf.appendIndent(indent).append("abstract statement {").appendLineSeparator();
+		for (Statement stat : stats) {
+			buf.append(stat.toJava(indent + 1, tracer));
+		}
+		buf.appendIndent(indent).append("}");
 
-    return buf;
-  }
+		return buf;
+	}
 }

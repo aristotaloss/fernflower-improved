@@ -24,19 +24,19 @@ package org.jetbrains.java.decompiler.code;
 
 public class JumpInstruction extends Instruction {
 
-  public int destination;
+	public int destination;
 
-  public JumpInstruction() {
-  }
+	public JumpInstruction() {
+	}
 
-  public void initInstruction(InstructionSequence seq) {
-    destination = seq.getPointerByRelOffset(this.getOperand(0));
-  }
+	public void initInstruction(InstructionSequence seq) {
+		destination = seq.getPointerByRelOffset(this.getOperand(0));
+	}
 
-  public JumpInstruction clone() {
-    JumpInstruction newinstr = (JumpInstruction)super.clone();
+	public JumpInstruction clone() {
+		JumpInstruction newinstr = (JumpInstruction) super.clone();
 
-    newinstr.destination = destination;
-    return newinstr;
-  }
+		newinstr.destination = destination;
+		return newinstr;
+	}
 }

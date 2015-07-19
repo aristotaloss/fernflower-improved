@@ -20,11 +20,8 @@ import java.util.List;
 
 public class GenericClassDescriptor {
 
-  public GenericType superclass;
-
-  public final List<GenericType> superinterfaces = new ArrayList<GenericType>();
-
-  public final List<String> fparameters = new ArrayList<String>();
-
-  public final List<List<GenericType>> fbounds = new ArrayList<List<GenericType>>();
+	public final List<GenericType> superinterfaces = new ArrayList<GenericType>();
+	public final List<String> fparameters = new ArrayList<String>();
+	public final List<List<GenericType>> fbounds = new ArrayList<List<GenericType>>();
+	public GenericType superclass;
 }

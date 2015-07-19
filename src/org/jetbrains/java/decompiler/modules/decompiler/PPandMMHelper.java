@@ -31,123 +31,118 @@ import java.util.List;
 
 public class PPandMMHelper {
 
-  private boolean exprentReplaced;
+	private boolean exprentReplaced;
 
-  public boolean findPPandMM(RootStatement root) {
+	public boolean findPPandMM(RootStatement root) {
 
-    FlattenStatementsHelper flatthelper = new FlattenStatementsHelper();
-    DirectGraph dgraph = flatthelper.buildDirectGraph(root);
+		FlattenStatementsHelper flatthelper = new FlattenStatementsHelper();
+		DirectGraph dgraph = flatthelper.buildDirectGraph(root);
 
-    LinkedList<DirectNode> stack = new LinkedList<DirectNode>();
-    stack.add(dgraph.first);
+		LinkedList<DirectNode> stack = new LinkedList<DirectNode>();
+		stack.add(dgraph.first);
 
-    HashSet<DirectNode> setVisited = new HashSet<DirectNode>();
+		HashSet<DirectNode> setVisited = new HashSet<DirectNode>();
 
-    boolean res = false;
+		boolean res = false;
 
-    while (!stack.isEmpty()) {
+		while (!stack.isEmpty()) {
 
-      DirectNode node = stack.removeFirst();
+			DirectNode node = stack.removeFirst();
 
-      if (setVisited.contains(node)) {
-        continue;
-      }
-      setVisited.add(node);
+			if (setVisited.contains(node)) {
+				continue;
+			}
+			setVisited.add(node);
 
-      res |= processExprentList(node.exprents);
+			res |= processExprentList(node.exprents);
 
-      stack.addAll(node.succs);
-    }
+			stack.addAll(node.succs);
+		}
 
-    return res;
-  }
+		return res;
+	}
 
-  private boolean processExprentList(List<Exprent> lst) {
+	private boolean processExprentList(List<Exprent> lst) {
 
-    boolean result = false;
+		boolean result = false;
 
-    for (int i = 0; i < lst.size(); i++) {
-      Exprent exprent = lst.get(i);
-      exprentReplaced = false;
+		for (int i = 0; i < lst.size(); i++) {
+			Exprent exprent = lst.get(i);
+			exprentReplaced = false;
 
-      Exprent retexpr = processExprentRecursive(exprent);
-      if (retexpr != null) {
-        lst.set(i, retexpr);
+			Exprent retexpr = processExprentRecursive(exprent);
+			if (retexpr != null) {
+				lst.set(i, retexpr);
 
-        result = true;
-        i--; // process the same exprent again
-      }
+				result = true;
+				i--; // process the same exprent again
+			}
 
-      result |= exprentReplaced;
-    }
+			result |= exprentReplaced;
+		}
 
-    return result;
-  }
+		return result;
+	}
 
-  private Exprent processExprentRecursive(Exprent exprent) {
+	private Exprent processExprentRecursive(Exprent exprent) {
 
-    boolean replaced = true;
-    while (replaced) {
-      replaced = false;
+		boolean replaced = true;
+		while (replaced) {
+			replaced = false;
 
-      for (Exprent expr : exprent.getAllExprents()) {
-        Exprent retexpr = processExprentRecursive(expr);
-        if (retexpr != null) {
-          exprent.replaceExprent(expr, retexpr);
-          replaced = true;
-          exprentReplaced = true;
-          break;
-        }
-      }
-    }
+			for (Exprent expr : exprent.getAllExprents()) {
+				Exprent retexpr = processExprentRecursive(expr);
+				if (retexpr != null) {
+					exprent.replaceExprent(expr, retexpr);
+					replaced = true;
+					exprentReplaced = true;
+					break;
+				}
+			}
+		}
 
-    if (exprent.type == Exprent.EXPRENT_ASSIGNMENT) {
-      AssignmentExprent as = (AssignmentExprent)exprent;
+		if (exprent.type == Exprent.EXPRENT_ASSIGNMENT) {
+			AssignmentExprent as = (AssignmentExprent) exprent;
 
-      if (as.getRight().type == Exprent.EXPRENT_FUNCTION) {
-        FunctionExprent func = (FunctionExprent)as.getRight();
+			if (as.getRight().type == Exprent.EXPRENT_FUNCTION) {
+				FunctionExprent func = (FunctionExprent) as.getRight();
 
-        VarType midlayer = null;
-        if (func.getFuncType() >= FunctionExprent.FUNCTION_I2L &&
-            func.getFuncType() <= FunctionExprent.FUNCTION_I2S) {
-          midlayer = func.getSimpleCastType();
-          if (func.getLstOperands().get(0).type == Exprent.EXPRENT_FUNCTION) {
-            func = (FunctionExprent)func.getLstOperands().get(0);
-          }
-          else {
-            return null;
-          }
-        }
+				VarType midlayer = null;
+				if (func.getFuncType() >= FunctionExprent.FUNCTION_I2L && func.getFuncType() <= FunctionExprent.FUNCTION_I2S) {
+					midlayer = func.getSimpleCastType();
+					if (func.getLstOperands().get(0).type == Exprent.EXPRENT_FUNCTION) {
+						func = (FunctionExprent) func.getLstOperands().get(0);
+					} else {
+						return null;
+					}
+				}
 
-        if (func.getFuncType() == FunctionExprent.FUNCTION_ADD ||
-            func.getFuncType() == FunctionExprent.FUNCTION_SUB) {
-          Exprent econd = func.getLstOperands().get(0);
-          Exprent econst = func.getLstOperands().get(1);
+				if (func.getFuncType() == FunctionExprent.FUNCTION_ADD || func.getFuncType() == FunctionExprent.FUNCTION_SUB) {
+					Exprent econd = func.getLstOperands().get(0);
+					Exprent econst = func.getLstOperands().get(1);
 
-          if (econst.type != Exprent.EXPRENT_CONST && econd.type == Exprent.EXPRENT_CONST &&
-              func.getFuncType() == FunctionExprent.FUNCTION_ADD) {
-            econd = econst;
-            econst = func.getLstOperands().get(0);
-          }
+					if (econst.type != Exprent.EXPRENT_CONST && econd.type == Exprent.EXPRENT_CONST &&
+							func.getFuncType() == FunctionExprent.FUNCTION_ADD) {
+						econd = econst;
+						econst = func.getLstOperands().get(0);
+					}
 
-          if (econst.type == Exprent.EXPRENT_CONST && ((ConstExprent)econst).hasValueOne()) {
-            Exprent left = as.getLeft();
+					if (econst.type == Exprent.EXPRENT_CONST && ((ConstExprent) econst).hasValueOne()) {
+						Exprent left = as.getLeft();
 
-            VarType condtype = econd.getExprType();
-            if (left.equals(econd) && (midlayer == null || midlayer.equals(condtype))) {
-              FunctionExprent ret = new FunctionExprent(
-                func.getFuncType() == FunctionExprent.FUNCTION_ADD ? FunctionExprent.FUNCTION_PPI : FunctionExprent.FUNCTION_MMI,
-                econd, func.bytecode);
-              ret.setImplicitType(condtype);
+						VarType condtype = econd.getExprType();
+						if (left.equals(econd) && (midlayer == null || midlayer.equals(condtype))) {
+							FunctionExprent ret = new FunctionExprent(func.getFuncType() == FunctionExprent.FUNCTION_ADD ? FunctionExprent.FUNCTION_PPI : FunctionExprent.FUNCTION_MMI, econd, func.bytecode);
+							ret.setImplicitType(condtype);
 
-              exprentReplaced = true;
-              return ret;
-            }
-          }
-        }
-      }
-    }
+							exprentReplaced = true;
+							return ret;
+						}
+					}
+				}
+			}
+		}
 
-    return null;
-  }
+		return null;
+	}
 }

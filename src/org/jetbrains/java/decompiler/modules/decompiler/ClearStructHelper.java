@@ -23,18 +23,18 @@ import java.util.LinkedList;
 
 public class ClearStructHelper {
 
-  public static void clearStatements(RootStatement root) {
+	public static void clearStatements(RootStatement root) {
 
-    LinkedList<Statement> stack = new LinkedList<Statement>();
-    stack.add(root);
+		LinkedList<Statement> stack = new LinkedList<Statement>();
+		stack.add(root);
 
-    while (!stack.isEmpty()) {
+		while (!stack.isEmpty()) {
 
-      Statement stat = stack.removeFirst();
+			Statement stat = stack.removeFirst();
 
-      stat.clearTempInformation();
+			stat.clearTempInformation();
 
-      stack.addAll(stat.getStats());
-    }
-  }
+			stack.addAll(stat.getStats());
+		}
+	}
 }

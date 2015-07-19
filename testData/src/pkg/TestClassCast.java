@@ -13,16 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package pkg;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class TestClassCast {
-  public void test(List list) {
-    List a = list;
-    if (a != null) {
-      (a = new ArrayList(a)).add("23");
-    }
-    System.out.println(a.size());
-  }
+	public void test(List list) {
+		List a = list;
+		if (a != null) {
+			(a = new ArrayList(a)).add("23");
+		}
+		System.out.println(a.size());
+	}
 }

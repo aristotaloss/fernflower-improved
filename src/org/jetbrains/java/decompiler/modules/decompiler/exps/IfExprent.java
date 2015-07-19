@@ -81,6 +81,21 @@ public class IfExprent extends Exprent {
 		addBytecodeOffsets(bytecodeOffsets);
 	}
 
+	public static int reverseComp(int funcType) {
+		switch (funcType) {
+			case FunctionExprent.FUNCTION_LT:
+				return FunctionExprent.FUNCTION_GT;
+			case FunctionExprent.FUNCTION_GT:
+				return FunctionExprent.FUNCTION_LT;
+			case FunctionExprent.FUNCTION_GE:
+				return FunctionExprent.FUNCTION_LE;
+			case FunctionExprent.FUNCTION_LE:
+				return FunctionExprent.FUNCTION_GE;
+			default:
+				return funcType;
+		}
+	}
+
 	@Override
 	public Exprent copy() {
 		return new IfExprent(condition.copy(), bytecode);
@@ -97,21 +112,6 @@ public class IfExprent extends Exprent {
 	public TextBuffer toJava(int indent, BytecodeMappingTracer tracer) {
 		tracer.addMapping(bytecode);
 		return condition.toJava(indent, tracer).enclose("if(", ")");
-	}
-
-	public static int reverseComp(int funcType) {
-		switch (funcType) {
-			case FunctionExprent.FUNCTION_LT:
-				return FunctionExprent.FUNCTION_GT;
-			case FunctionExprent.FUNCTION_GT:
-				return FunctionExprent.FUNCTION_LT;
-			case FunctionExprent.FUNCTION_GE:
-				return FunctionExprent.FUNCTION_LE;
-			case FunctionExprent.FUNCTION_LE:
-				return FunctionExprent.FUNCTION_GE;
-			default:
-				return funcType;
-		}
 	}
 
 	@Override

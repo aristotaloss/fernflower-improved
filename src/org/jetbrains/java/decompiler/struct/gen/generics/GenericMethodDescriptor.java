@@ -20,13 +20,11 @@ import java.util.List;
 
 public class GenericMethodDescriptor {
 
-  public final List<String> fparameters = new ArrayList<String>();
+	public final List<String> fparameters = new ArrayList<String>();
 
-  public final List<List<GenericType>> fbounds = new ArrayList<List<GenericType>>();
+	public final List<List<GenericType>> fbounds = new ArrayList<List<GenericType>>();
 
-  public final List<GenericType> params = new ArrayList<GenericType>();
-
-  public GenericType ret;
-
-  public final List<GenericType> exceptions = new ArrayList<GenericType>();
+	public final List<GenericType> params = new ArrayList<GenericType>();
+	public final List<GenericType> exceptions = new ArrayList<GenericType>();
+	public GenericType ret;
 }

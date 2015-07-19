@@ -17,5 +17,5 @@ package org.jetbrains.java.decompiler.struct.gen.generics;
 
 public class GenericFieldDescriptor {
 
-  public GenericType type;
+	public GenericType type;
 }

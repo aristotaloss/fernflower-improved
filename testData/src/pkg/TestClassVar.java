@@ -13,47 +13,44 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package pkg;
-
 
 public class TestClassVar {
 
-  private boolean field_boolean = (Math.random() > 0);
-  public int field_int = 0;
+	public int field_int = 0;
+	private boolean field_boolean = (Math.random() > 0);
 
-  public void testFieldSSAU() {
+	public void testFieldSSAU() {
 
-    for (int i = 0; i < 10; i++) {
+		for (int i = 0; i < 10; i++) {
 
-      try {
-        System.out.println();
-      }
-      finally {
-        if (field_boolean) {
-          System.out.println();
-        }
-      }
-    }
-  }
+			try {
+				System.out.println();
+			} finally {
+				if (field_boolean) {
+					System.out.println();
+				}
+			}
+		}
+	}
 
-  public Long testFieldSSAU1() { // IDEA-127466
-    return new Long(field_int++);
-  }
+	public Long testFieldSSAU1() { // IDEA-127466
+		return new Long(field_int++);
+	}
 
-  public void testComplexPropagation() {
+	public void testComplexPropagation() {
 
-    int a = 0;
+		int a = 0;
 
-    while (a < 10) {
+		while (a < 10) {
 
-      int b = a;
+			int b = a;
 
-      for (; a < 10 && a == 0; a++) {
-      }
+			for (; a < 10 && a == 0; a++) {
+			}
 
-      if (b != a) {
-        System.out.println();
-      }
-    }
-  }
+			if (b != a) {
+				System.out.println();
+			}
+		}
+	}
 }

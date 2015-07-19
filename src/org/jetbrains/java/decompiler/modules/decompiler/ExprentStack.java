@@ -20,26 +20,26 @@ import org.jetbrains.java.decompiler.util.ListStack;
 
 public class ExprentStack extends ListStack<Exprent> {
 
-  public ExprentStack() {
-  }
+	public ExprentStack() {
+	}
 
-  public ExprentStack(ListStack<Exprent> list) {
-    super(list);
-    pointer = list.getPointer();
-  }
+	public ExprentStack(ListStack<Exprent> list) {
+		super(list);
+		pointer = list.getPointer();
+	}
 
-  public Exprent push(Exprent item) {
-    super.push(item);
+	public Exprent push(Exprent item) {
+		super.push(item);
 
-    return item;
-  }
+		return item;
+	}
 
-  public Exprent pop() {
+	public Exprent pop() {
 
-    return this.remove(--pointer);
-  }
+		return this.remove(--pointer);
+	}
 
-  public ExprentStack clone() {
-    return new ExprentStack(this);
-  }
+	public ExprentStack clone() {
+		return new ExprentStack(this);
+	}
 }

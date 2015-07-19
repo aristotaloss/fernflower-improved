@@ -21,15 +21,15 @@ import java.io.IOException;
 
 public class StructSourceFileAttribute extends StructGeneralAttribute {
 
-  private String fileName;
+	private String fileName;
 
-  @Override
-  public void initContent(ConstantPool pool) throws IOException {
-    int index = stream().readUnsignedShort();
-    fileName = pool.getPrimitiveConstant(index).getString();
-  }
+	@Override
+	public void initContent(ConstantPool pool) throws IOException {
+		int index = stream().readUnsignedShort();
+		fileName = pool.getPrimitiveConstant(index).getString();
+	}
 
-  public String getFileName() {
-    return fileName;
-  }
+	public String getFileName() {
+		return fileName;
+	}
 }

@@ -40,171 +40,164 @@ import java.util.Set;
 
 public class ClassWrapper {
 
-  private final StructClass classStruct;
-  private final Set<String> hiddenMembers = new HashSet<String>();
-  private final VBStyleCollection<Exprent, String> staticFieldInitializers = new VBStyleCollection<Exprent, String>();
-  private final VBStyleCollection<Exprent, String> dynamicFieldInitializers = new VBStyleCollection<Exprent, String>();
-  private final VBStyleCollection<MethodWrapper, String> methods = new VBStyleCollection<MethodWrapper, String>();
+	private final StructClass classStruct;
+	private final Set<String> hiddenMembers = new HashSet<String>();
+	private final VBStyleCollection<Exprent, String> staticFieldInitializers = new VBStyleCollection<Exprent, String>();
+	private final VBStyleCollection<Exprent, String> dynamicFieldInitializers = new VBStyleCollection<Exprent, String>();
+	private final VBStyleCollection<MethodWrapper, String> methods = new VBStyleCollection<MethodWrapper, String>();
 
-  public ClassWrapper(StructClass classStruct) {
-    this.classStruct = classStruct;
-  }
+	public ClassWrapper(StructClass classStruct) {
+		this.classStruct = classStruct;
+	}
 
-  public void init() throws IOException {
-    DecompilerContext.setProperty(DecompilerContext.CURRENT_CLASS, classStruct);
-    DecompilerContext.setProperty(DecompilerContext.CURRENT_CLASS_WRAPPER, this);
-    DecompilerContext.getLogger().startClass(classStruct.qualifiedName);
+	@SuppressWarnings("deprecation")
+	private static void killThread(Thread thread) {
+		thread.stop();
+	}
 
-    // collect field names
-    Set<String> setFieldNames = new HashSet<String>();
-    for (StructField fd : classStruct.getFields()) {
-      setFieldNames.add(fd.getName());
-    }
+	public void init() throws IOException {
+		DecompilerContext.setProperty(DecompilerContext.CURRENT_CLASS, classStruct);
+		DecompilerContext.setProperty(DecompilerContext.CURRENT_CLASS_WRAPPER, this);
+		DecompilerContext.getLogger().startClass(classStruct.qualifiedName);
 
-    int maxSec = Integer.parseInt(DecompilerContext.getProperty(IFernflowerPreferences.MAX_PROCESSING_METHOD).toString());
-    boolean testMode = DecompilerContext.getOption(IFernflowerPreferences.UNIT_TEST_MODE);
+		// collect field names
+		Set<String> setFieldNames = new HashSet<String>();
+		for (StructField fd : classStruct.getFields()) {
+			setFieldNames.add(fd.getName());
+		}
 
-    for (StructMethod mt : classStruct.getMethods()) {
-      DecompilerContext.getLogger().startMethod(mt.getName() + " " + mt.getDescriptor());
+		int maxSec = Integer.parseInt(DecompilerContext.getProperty(IFernflowerPreferences.MAX_PROCESSING_METHOD).toString());
+		boolean testMode = DecompilerContext.getOption(IFernflowerPreferences.UNIT_TEST_MODE);
 
-      VarNamesCollector vc = new VarNamesCollector();
-      DecompilerContext.setVarNamesCollector(vc);
+		for (StructMethod mt : classStruct.getMethods()) {
+			DecompilerContext.getLogger().startMethod(mt.getName() + " " + mt.getDescriptor());
 
-      CounterContainer counter = new CounterContainer();
-      DecompilerContext.setCounterContainer(counter);
+			VarNamesCollector vc = new VarNamesCollector();
+			DecompilerContext.setVarNamesCollector(vc);
 
-      DecompilerContext.setProperty(DecompilerContext.CURRENT_METHOD, mt);
-      DecompilerContext.setProperty(DecompilerContext.CURRENT_METHOD_DESCRIPTOR, MethodDescriptor.parseDescriptor(mt.getDescriptor()));
+			CounterContainer counter = new CounterContainer();
+			DecompilerContext.setCounterContainer(counter);
 
-      VarProcessor varProc = new VarProcessor();
-      DecompilerContext.setProperty(DecompilerContext.CURRENT_VAR_PROCESSOR, varProc);
+			DecompilerContext.setProperty(DecompilerContext.CURRENT_METHOD, mt);
+			DecompilerContext.setProperty(DecompilerContext.CURRENT_METHOD_DESCRIPTOR, MethodDescriptor.parseDescriptor(mt.getDescriptor()));
 
-      RootStatement root = null;
+			VarProcessor varProc = new VarProcessor();
+			DecompilerContext.setProperty(DecompilerContext.CURRENT_VAR_PROCESSOR, varProc);
 
-      boolean isError = false;
+			RootStatement root = null;
 
-      try {
-        if (mt.containsCode()) {
-          if (maxSec == 0 || testMode) {
-            root = MethodProcessorRunnable.codeToJava(mt, varProc);
-          }
-          else {
-            MethodProcessorRunnable mtProc = new MethodProcessorRunnable(mt, varProc, DecompilerContext.getCurrentContext());
+			boolean isError = false;
 
-            Thread mtThread = new Thread(mtProc, "Java decompiler");
-            long stopAt = System.currentTimeMillis() + maxSec * 1000;
+			try {
+				if (mt.containsCode()) {
+					if (maxSec == 0 || testMode) {
+						root = MethodProcessorRunnable.codeToJava(mt, varProc);
+					} else {
+						MethodProcessorRunnable mtProc = new MethodProcessorRunnable(mt, varProc, DecompilerContext.getCurrentContext());
 
-            mtThread.start();
+						Thread mtThread = new Thread(mtProc, "Java decompiler");
+						long stopAt = System.currentTimeMillis() + maxSec * 1000;
 
-            while (!mtProc.isFinished()) {
-              try {
-                synchronized (mtProc.lock) {
-                  mtProc.lock.wait(200);
-                }
-              }
-              catch (InterruptedException e) {
-                killThread(mtThread);
-                throw e;
-              }
+						mtThread.start();
 
-              if (System.currentTimeMillis() >= stopAt) {
-                String message = "Processing time limit exceeded for method " + mt.getName() + ", execution interrupted.";
-                DecompilerContext.getLogger().writeMessage(message, IFernflowerLogger.Severity.ERROR);
-                killThread(mtThread);
-                isError = true;
-                break;
-              }
-            }
+						while (!mtProc.isFinished()) {
+							try {
+								synchronized (mtProc.lock) {
+									mtProc.lock.wait(200);
+								}
+							} catch (InterruptedException e) {
+								killThread(mtThread);
+								throw e;
+							}
 
-            if (!isError) {
-              root = mtProc.getResult();
-            }
-          }
-        }
-        else {
-          boolean thisVar = !mt.hasModifier(CodeConstants.ACC_STATIC);
-          MethodDescriptor md = MethodDescriptor.parseDescriptor(mt.getDescriptor());
+							if (System.currentTimeMillis() >= stopAt) {
+								String message = "Processing time limit exceeded for method " + mt.getName() + ", execution interrupted.";
+								DecompilerContext.getLogger().writeMessage(message, IFernflowerLogger.Severity.ERROR);
+								killThread(mtThread);
+								isError = true;
+								break;
+							}
+						}
 
-          int paramCount = 0;
-          if (thisVar) {
-            varProc.getThisVars().put(new VarVersionPair(0, 0), classStruct.qualifiedName);
-            paramCount = 1;
-          }
-          paramCount += md.params.length;
+						if (!isError) {
+							root = mtProc.getResult();
+						}
+					}
+				} else {
+					boolean thisVar = !mt.hasModifier(CodeConstants.ACC_STATIC);
+					MethodDescriptor md = MethodDescriptor.parseDescriptor(mt.getDescriptor());
 
-          int varIndex = 0;
-          for (int i = 0; i < paramCount; i++) {
-            varProc.setVarName(new VarVersionPair(varIndex, 0), vc.getFreeName(varIndex));
+					int paramCount = 0;
+					if (thisVar) {
+						varProc.getThisVars().put(new VarVersionPair(0, 0), classStruct.qualifiedName);
+						paramCount = 1;
+					}
+					paramCount += md.params.length;
 
-            if (thisVar) {
-              if (i == 0) {
-                varIndex++;
-              }
-              else {
-                varIndex += md.params[i - 1].stackSize;
-              }
-            }
-            else {
-              varIndex += md.params[i].stackSize;
-            }
-          }
-        }
-      }
-      catch (Throwable ex) {
-        DecompilerContext.getLogger().writeMessage("Method " + mt.getName() + " " + mt.getDescriptor() + " couldn't be decompiled.", ex);
-        isError = true;
-      }
+					int varIndex = 0;
+					for (int i = 0; i < paramCount; i++) {
+						varProc.setVarName(new VarVersionPair(varIndex, 0), vc.getFreeName(varIndex));
 
-      MethodWrapper methodWrapper = new MethodWrapper(root, varProc, mt, counter);
-      methodWrapper.decompiledWithErrors = isError;
+						if (thisVar) {
+							if (i == 0) {
+								varIndex++;
+							} else {
+								varIndex += md.params[i - 1].stackSize;
+							}
+						} else {
+							varIndex += md.params[i].stackSize;
+						}
+					}
+				}
+			} catch (Throwable ex) {
+				DecompilerContext.getLogger().writeMessage("Method " + mt.getName() + " " + mt.getDescriptor() + " couldn't be decompiled.", ex);
+				isError = true;
+			}
 
-      methods.addWithKey(methodWrapper, InterpreterUtil.makeUniqueKey(mt.getName(), mt.getDescriptor()));
+			MethodWrapper methodWrapper = new MethodWrapper(root, varProc, mt, counter);
+			methodWrapper.decompiledWithErrors = isError;
 
-      // rename vars so that no one has the same name as a field
-      varProc.refreshVarNames(new VarNamesCollector(setFieldNames));
+			methods.addWithKey(methodWrapper, InterpreterUtil.makeUniqueKey(mt.getName(), mt.getDescriptor()));
 
-      // if debug information present and should be used
-      if (DecompilerContext.getOption(IFernflowerPreferences.USE_DEBUG_VAR_NAMES)) {
-        StructLocalVariableTableAttribute attr = (StructLocalVariableTableAttribute)mt.getAttributes().getWithKey(
-          StructGeneralAttribute.ATTRIBUTE_LOCAL_VARIABLE_TABLE);
+			// rename vars so that no one has the same name as a field
+			varProc.refreshVarNames(new VarNamesCollector(setFieldNames));
 
-        if (attr != null) {
-          varProc.setDebugVarNames(attr.getMapVarNames());
-        }
-      }
+			// if debug information present and should be used
+			if (DecompilerContext.getOption(IFernflowerPreferences.USE_DEBUG_VAR_NAMES)) {
+				StructLocalVariableTableAttribute attr = (StructLocalVariableTableAttribute) mt.getAttributes().getWithKey(StructGeneralAttribute.ATTRIBUTE_LOCAL_VARIABLE_TABLE);
 
-      DecompilerContext.getLogger().endMethod();
-    }
+				if (attr != null) {
+					varProc.setDebugVarNames(attr.getMapVarNames());
+				}
+			}
 
-    DecompilerContext.getLogger().endClass();
-  }
+			DecompilerContext.getLogger().endMethod();
+		}
 
-  @SuppressWarnings("deprecation")
-  private static void killThread(Thread thread) {
-    thread.stop();
-  }
+		DecompilerContext.getLogger().endClass();
+	}
 
-  public MethodWrapper getMethodWrapper(String name, String descriptor) {
-    return methods.getWithKey(InterpreterUtil.makeUniqueKey(name, descriptor));
-  }
+	public MethodWrapper getMethodWrapper(String name, String descriptor) {
+		return methods.getWithKey(InterpreterUtil.makeUniqueKey(name, descriptor));
+	}
 
-  public StructClass getClassStruct() {
-    return classStruct;
-  }
+	public StructClass getClassStruct() {
+		return classStruct;
+	}
 
-  public VBStyleCollection<MethodWrapper, String> getMethods() {
-    return methods;
-  }
+	public VBStyleCollection<MethodWrapper, String> getMethods() {
+		return methods;
+	}
 
-  public Set<String> getHiddenMembers() {
-    return hiddenMembers;
-  }
+	public Set<String> getHiddenMembers() {
+		return hiddenMembers;
+	}
 
-  public VBStyleCollection<Exprent, String> getStaticFieldInitializers() {
-    return staticFieldInitializers;
-  }
+	public VBStyleCollection<Exprent, String> getStaticFieldInitializers() {
+		return staticFieldInitializers;
+	}
 
-  public VBStyleCollection<Exprent, String> getDynamicFieldInitializers() {
-    return dynamicFieldInitializers;
-  }
+	public VBStyleCollection<Exprent, String> getDynamicFieldInitializers() {
+		return dynamicFieldInitializers;
+	}
 }

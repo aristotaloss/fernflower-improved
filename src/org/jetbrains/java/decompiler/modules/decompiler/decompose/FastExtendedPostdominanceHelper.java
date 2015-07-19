@@ -26,325 +26,319 @@ import java.util.Map.Entry;
 
 public class FastExtendedPostdominanceHelper {
 
-  private List<Statement> lstReversePostOrderList;
+	private final HashMap<Integer, FastFixedSet<Integer>> mapExtPostdominators = new HashMap<Integer, FastFixedSet<Integer>>();
+	private List<Statement> lstReversePostOrderList;
+	private HashMap<Integer, FastFixedSet<Integer>> mapSupportPoints = new HashMap<Integer, FastFixedSet<Integer>>();
+	private Statement statement;
 
-  private HashMap<Integer, FastFixedSet<Integer>> mapSupportPoints = new HashMap<Integer, FastFixedSet<Integer>>();
+	private FastFixedSetFactory<Integer> factory;
 
-  private final HashMap<Integer, FastFixedSet<Integer>> mapExtPostdominators = new HashMap<Integer, FastFixedSet<Integer>>();
+	public HashMap<Integer, Set<Integer>> getExtendedPostdominators(Statement statement) {
 
-  private Statement statement;
+		this.statement = statement;
 
-  private FastFixedSetFactory<Integer> factory;
+		HashSet<Integer> set = new HashSet<Integer>();
+		for (Statement st : statement.getStats()) {
+			set.add(st.id);
+		}
+		this.factory = new FastFixedSetFactory<Integer>(set);
 
-  public HashMap<Integer, Set<Integer>> getExtendedPostdominators(Statement statement) {
+		lstReversePostOrderList = statement.getReversePostOrderList();
 
-    this.statement = statement;
+		//		try {
+		//			DotExporter.toDotFile(statement, new File("c:\\Temp\\stat1.dot"));
+		//		} catch (Exception ex) {
+		//			ex.printStackTrace();
+		//		}
 
-    HashSet<Integer> set = new HashSet<Integer>();
-    for (Statement st : statement.getStats()) {
-      set.add(st.id);
-    }
-    this.factory = new FastFixedSetFactory<Integer>(set);
+		calcDefaultReachableSets();
 
-    lstReversePostOrderList = statement.getReversePostOrderList();
+		removeErroneousNodes();
 
-    //		try {
-    //			DotExporter.toDotFile(statement, new File("c:\\Temp\\stat1.dot"));
-    //		} catch (Exception ex) {
-    //			ex.printStackTrace();
-    //		}
+		DominatorTreeExceptionFilter filter = new DominatorTreeExceptionFilter(statement);
+		filter.initialize();
 
-    calcDefaultReachableSets();
+		filterOnExceptionRanges(filter);
 
-    removeErroneousNodes();
+		filterOnDominance(filter);
 
-    DominatorTreeExceptionFilter filter = new DominatorTreeExceptionFilter(statement);
-    filter.initialize();
+		HashMap<Integer, Set<Integer>> res = new HashMap<Integer, Set<Integer>>();
+		for (Entry<Integer, FastFixedSet<Integer>> entry : mapExtPostdominators.entrySet()) {
+			res.put(entry.getKey(), entry.getValue().toPlainSet());
+		}
 
-    filterOnExceptionRanges(filter);
+		return res;
+	}
 
-    filterOnDominance(filter);
 
-    HashMap<Integer, Set<Integer>> res = new HashMap<Integer, Set<Integer>>();
-    for (Entry<Integer, FastFixedSet<Integer>> entry : mapExtPostdominators.entrySet()) {
-      res.put(entry.getKey(), entry.getValue().toPlainSet());
-    }
+	private void filterOnDominance(DominatorTreeExceptionFilter filter) {
 
-    return res;
-  }
+		DominatorEngine engine = filter.getDomEngine();
 
+		for (Integer head : new HashSet<Integer>(mapExtPostdominators.keySet())) {
 
-  private void filterOnDominance(DominatorTreeExceptionFilter filter) {
+			FastFixedSet<Integer> setPostdoms = mapExtPostdominators.get(head);
 
-    DominatorEngine engine = filter.getDomEngine();
+			LinkedList<Statement> stack = new LinkedList<Statement>();
+			LinkedList<FastFixedSet<Integer>> stackPath = new LinkedList<FastFixedSet<Integer>>();
 
-    for (Integer head : new HashSet<Integer>(mapExtPostdominators.keySet())) {
+			stack.add(statement.getStats().getWithKey(head));
+			stackPath.add(factory.spawnEmptySet());
 
-      FastFixedSet<Integer> setPostdoms = mapExtPostdominators.get(head);
+			Set<Statement> setVisited = new HashSet<Statement>();
 
-      LinkedList<Statement> stack = new LinkedList<Statement>();
-      LinkedList<FastFixedSet<Integer>> stackPath = new LinkedList<FastFixedSet<Integer>>();
+			setVisited.add(stack.getFirst());
 
-      stack.add(statement.getStats().getWithKey(head));
-      stackPath.add(factory.spawnEmptySet());
+			while (!stack.isEmpty()) {
 
-      Set<Statement> setVisited = new HashSet<Statement>();
+				Statement stat = stack.removeFirst();
+				FastFixedSet<Integer> path = stackPath.removeFirst();
 
-      setVisited.add(stack.getFirst());
-      
-      while (!stack.isEmpty()) {
+				if (setPostdoms.contains(stat.id)) {
+					path.add(stat.id);
+				}
 
-        Statement stat = stack.removeFirst();
-        FastFixedSet<Integer> path = stackPath.removeFirst();
+				if (path.contains(setPostdoms)) {
+					continue;
+				}
 
-        if (setPostdoms.contains(stat.id)) {
-          path.add(stat.id);
-        }
+				if (!engine.isDominator(stat.id, head)) {
+					setPostdoms.complement(path);
+					continue;
+				}
 
-        if (path.contains(setPostdoms)) {
-          continue;
-        }
+				for (StatEdge edge : stat.getSuccessorEdges(StatEdge.TYPE_REGULAR)) {
 
-        if(!engine.isDominator(stat.id, head)) {
-          setPostdoms.complement(path);
-          continue;
-        }
-        
-        for (StatEdge edge : stat.getSuccessorEdges(StatEdge.TYPE_REGULAR)) {
-          
-          Statement edge_destination = edge.getDestination();
-          
-          if(!setVisited.contains(edge_destination)) {
-            
-            stack.add(edge_destination);
-            stackPath.add(path.getCopy());
-            
-            setVisited.add(edge_destination); 
-          }
-        }
-      }
+					Statement edge_destination = edge.getDestination();
 
-      if (setPostdoms.isEmpty()) {
-        mapExtPostdominators.remove(head);
-      }
-    }
-  }
+					if (!setVisited.contains(edge_destination)) {
 
+						stack.add(edge_destination);
+						stackPath.add(path.getCopy());
 
-  private void filterOnExceptionRanges(DominatorTreeExceptionFilter filter) {
+						setVisited.add(edge_destination);
+					}
+				}
+			}
 
+			if (setPostdoms.isEmpty()) {
+				mapExtPostdominators.remove(head);
+			}
+		}
+	}
 
-    for (Integer head : new HashSet<Integer>(mapExtPostdominators.keySet())) {
 
-      FastFixedSet<Integer> set = mapExtPostdominators.get(head);
-      for (Iterator<Integer> it = set.iterator(); it.hasNext(); ) {
-        if (!filter.acceptStatementPair(head, it.next())) {
-          it.remove();
-        }
-      }
-      if (set.isEmpty()) {
-        mapExtPostdominators.remove(head);
-      }
-    }
-  }
+	private void filterOnExceptionRanges(DominatorTreeExceptionFilter filter) {
 
 
-  private void removeErroneousNodes() {
+		for (Integer head : new HashSet<Integer>(mapExtPostdominators.keySet())) {
 
-    mapSupportPoints = new HashMap<Integer, FastFixedSet<Integer>>();
+			FastFixedSet<Integer> set = mapExtPostdominators.get(head);
+			for (Iterator<Integer> it = set.iterator(); it.hasNext(); ) {
+				if (!filter.acceptStatementPair(head, it.next())) {
+					it.remove();
+				}
+			}
+			if (set.isEmpty()) {
+				mapExtPostdominators.remove(head);
+			}
+		}
+	}
 
-    calcReachabilitySuppPoints(StatEdge.TYPE_REGULAR);
 
-    iterateReachability(new IReachabilityAction() {
-      public boolean action(Statement node, HashMap<Integer, FastFixedSet<Integer>> mapSets) {
+	private void removeErroneousNodes() {
 
-        Integer nodeid = node.id;
+		mapSupportPoints = new HashMap<Integer, FastFixedSet<Integer>>();
 
-        FastFixedSet<Integer> setReachability = mapSets.get(nodeid);
-        List<FastFixedSet<Integer>> lstPredSets = new ArrayList<FastFixedSet<Integer>>();
+		calcReachabilitySuppPoints(StatEdge.TYPE_REGULAR);
 
-        for (StatEdge prededge : node.getPredecessorEdges(StatEdge.TYPE_REGULAR)) {
-          FastFixedSet<Integer> setPred = mapSets.get(prededge.getSource().id);
-          if (setPred == null) {
-            setPred = mapSupportPoints.get(prededge.getSource().id);
-          }
+		iterateReachability(new IReachabilityAction() {
+			public boolean action(Statement node, HashMap<Integer, FastFixedSet<Integer>> mapSets) {
 
-          // setPred cannot be empty as it is a reachability set
-          lstPredSets.add(setPred);
-        }
+				Integer nodeid = node.id;
 
-        for (Integer id : setReachability.toPlainSet()) {
+				FastFixedSet<Integer> setReachability = mapSets.get(nodeid);
+				List<FastFixedSet<Integer>> lstPredSets = new ArrayList<FastFixedSet<Integer>>();
 
-          FastFixedSet<Integer> setReachabilityCopy = setReachability.getCopy();
+				for (StatEdge prededge : node.getPredecessorEdges(StatEdge.TYPE_REGULAR)) {
+					FastFixedSet<Integer> setPred = mapSets.get(prededge.getSource().id);
+					if (setPred == null) {
+						setPred = mapSupportPoints.get(prededge.getSource().id);
+					}
 
-          FastFixedSet<Integer> setIntersection = factory.spawnEmptySet();
-          boolean isIntersectionInitialized = false;
+					// setPred cannot be empty as it is a reachability set
+					lstPredSets.add(setPred);
+				}
 
-          for (FastFixedSet<Integer> predset : lstPredSets) {
-            if (predset.contains(id)) {
-              if (!isIntersectionInitialized) {
-                setIntersection.union(predset);
-                isIntersectionInitialized = true;
-              }
-              else {
-                setIntersection.intersection(predset);
-              }
-            }
-          }
+				for (Integer id : setReachability.toPlainSet()) {
 
-          if (nodeid != id.intValue()) {
-            setIntersection.add(nodeid);
-          }
-          else {
-            setIntersection.remove(nodeid);
-          }
+					FastFixedSet<Integer> setReachabilityCopy = setReachability.getCopy();
 
-          setReachabilityCopy.complement(setIntersection);
+					FastFixedSet<Integer> setIntersection = factory.spawnEmptySet();
+					boolean isIntersectionInitialized = false;
 
-          mapExtPostdominators.get(id).complement(setReachabilityCopy);
-        }
+					for (FastFixedSet<Integer> predset : lstPredSets) {
+						if (predset.contains(id)) {
+							if (!isIntersectionInitialized) {
+								setIntersection.union(predset);
+								isIntersectionInitialized = true;
+							} else {
+								setIntersection.intersection(predset);
+							}
+						}
+					}
 
-        return false;
-      }
-    }, StatEdge.TYPE_REGULAR);
+					if (nodeid != id.intValue()) {
+						setIntersection.add(nodeid);
+					} else {
+						setIntersection.remove(nodeid);
+					}
 
-    // exception handlers cannot be postdominator nodes
-    // TODO: replace with a standard set?
-    FastFixedSet<Integer> setHandlers = factory.spawnEmptySet();
-    boolean handlerfound = false;
+					setReachabilityCopy.complement(setIntersection);
 
-    for (Statement stat : statement.getStats()) {
-      if (stat.getPredecessorEdges(Statement.STATEDGE_DIRECT_ALL).isEmpty() &&
-          !stat.getPredecessorEdges(StatEdge.TYPE_EXCEPTION).isEmpty()) { // exception handler
-        setHandlers.add(stat.id);
-        handlerfound = true;
-      }
-    }
+					mapExtPostdominators.get(id).complement(setReachabilityCopy);
+				}
 
-    if (handlerfound) {
-      for (FastFixedSet<Integer> set : mapExtPostdominators.values()) {
-        set.complement(setHandlers);
-      }
-    }
-  }
+				return false;
+			}
+		}, StatEdge.TYPE_REGULAR);
 
+		// exception handlers cannot be postdominator nodes
+		// TODO: replace with a standard set?
+		FastFixedSet<Integer> setHandlers = factory.spawnEmptySet();
+		boolean handlerfound = false;
 
-  private void calcDefaultReachableSets() {
+		for (Statement stat : statement.getStats()) {
+			if (stat.getPredecessorEdges(Statement.STATEDGE_DIRECT_ALL).isEmpty() && !stat.getPredecessorEdges(StatEdge.TYPE_EXCEPTION).isEmpty()) { // exception handler
+				setHandlers.add(stat.id);
+				handlerfound = true;
+			}
+		}
 
-    int edgetype = StatEdge.TYPE_REGULAR | StatEdge.TYPE_EXCEPTION;
+		if (handlerfound) {
+			for (FastFixedSet<Integer> set : mapExtPostdominators.values()) {
+				set.complement(setHandlers);
+			}
+		}
+	}
 
-    calcReachabilitySuppPoints(edgetype);
 
-    for (Statement stat : statement.getStats()) {
-      mapExtPostdominators.put(stat.id, factory.spawnEmptySet());
-    }
+	private void calcDefaultReachableSets() {
 
-    iterateReachability(new IReachabilityAction() {
-      public boolean action(Statement node, HashMap<Integer, FastFixedSet<Integer>> mapSets) {
+		int edgetype = StatEdge.TYPE_REGULAR | StatEdge.TYPE_EXCEPTION;
 
-        Integer nodeid = node.id;
-        FastFixedSet<Integer> setReachability = mapSets.get(nodeid);
+		calcReachabilitySuppPoints(edgetype);
 
-        for (Integer id : setReachability.toPlainSet()) {
-          mapExtPostdominators.get(id).add(nodeid);
-        }
+		for (Statement stat : statement.getStats()) {
+			mapExtPostdominators.put(stat.id, factory.spawnEmptySet());
+		}
 
-        return false;
-      }
-    }, edgetype);
-  }
+		iterateReachability(new IReachabilityAction() {
+			public boolean action(Statement node, HashMap<Integer, FastFixedSet<Integer>> mapSets) {
 
+				Integer nodeid = node.id;
+				FastFixedSet<Integer> setReachability = mapSets.get(nodeid);
 
-  private void calcReachabilitySuppPoints(final int edgetype) {
+				for (Integer id : setReachability.toPlainSet()) {
+					mapExtPostdominators.get(id).add(nodeid);
+				}
 
-    iterateReachability(new IReachabilityAction() {
-      public boolean action(Statement node, HashMap<Integer, FastFixedSet<Integer>> mapSets) {
+				return false;
+			}
+		}, edgetype);
+	}
 
-        // consider to be a support point
-        for (StatEdge sucedge : node.getAllSuccessorEdges()) {
-          if ((sucedge.getType() & edgetype) != 0) {
-            if (mapSets.containsKey(sucedge.getDestination().id)) {
-              FastFixedSet<Integer> setReachability = mapSets.get(node.id);
 
-              if (!InterpreterUtil.equalObjects(setReachability, mapSupportPoints.get(node.id))) {
-                mapSupportPoints.put(node.id, setReachability);
-                return true;
-              }
-            }
-          }
-        }
+	private void calcReachabilitySuppPoints(final int edgetype) {
 
-        return false;
-      }
-    }, edgetype);
-  }
+		iterateReachability(new IReachabilityAction() {
+			public boolean action(Statement node, HashMap<Integer, FastFixedSet<Integer>> mapSets) {
 
-  private void iterateReachability(IReachabilityAction action, int edgetype) {
+				// consider to be a support point
+				for (StatEdge sucedge : node.getAllSuccessorEdges()) {
+					if ((sucedge.getType() & edgetype) != 0) {
+						if (mapSets.containsKey(sucedge.getDestination().id)) {
+							FastFixedSet<Integer> setReachability = mapSets.get(node.id);
 
-    while (true) {
+							if (!InterpreterUtil.equalObjects(setReachability, mapSupportPoints.get(node.id))) {
+								mapSupportPoints.put(node.id, setReachability);
+								return true;
+							}
+						}
+					}
+				}
 
-      boolean iterate = false;
+				return false;
+			}
+		}, edgetype);
+	}
 
-      HashMap<Integer, FastFixedSet<Integer>> mapSets = new HashMap<Integer, FastFixedSet<Integer>>();
+	private void iterateReachability(IReachabilityAction action, int edgetype) {
 
-      for (Statement stat : lstReversePostOrderList) {
+		while (true) {
 
-        FastFixedSet<Integer> set = factory.spawnEmptySet();
-        set.add(stat.id);
+			boolean iterate = false;
 
-        for (StatEdge prededge : stat.getAllPredecessorEdges()) {
-          if ((prededge.getType() & edgetype) != 0) {
-            Statement pred = prededge.getSource();
+			HashMap<Integer, FastFixedSet<Integer>> mapSets = new HashMap<Integer, FastFixedSet<Integer>>();
 
-            FastFixedSet<Integer> setPred = mapSets.get(pred.id);
-            if (setPred == null) {
-              setPred = mapSupportPoints.get(pred.id);
-            }
+			for (Statement stat : lstReversePostOrderList) {
 
-            if (setPred != null) {
-              set.union(setPred);
-            }
-          }
-        }
+				FastFixedSet<Integer> set = factory.spawnEmptySet();
+				set.add(stat.id);
 
-        mapSets.put(stat.id, set);
+				for (StatEdge prededge : stat.getAllPredecessorEdges()) {
+					if ((prededge.getType() & edgetype) != 0) {
+						Statement pred = prededge.getSource();
 
-        if (action != null) {
-          iterate |= action.action(stat, mapSets);
-        }
+						FastFixedSet<Integer> setPred = mapSets.get(pred.id);
+						if (setPred == null) {
+							setPred = mapSupportPoints.get(pred.id);
+						}
 
-        // remove reachability information of fully processed nodes (saves memory)
-        for (StatEdge prededge : stat.getAllPredecessorEdges()) {
-          if ((prededge.getType() & edgetype) != 0) {
-            Statement pred = prededge.getSource();
+						if (setPred != null) {
+							set.union(setPred);
+						}
+					}
+				}
 
-            if (mapSets.containsKey(pred.id)) {
-              boolean remstat = true;
-              for (StatEdge sucedge : pred.getAllSuccessorEdges()) {
-                if ((sucedge.getType() & edgetype) != 0) {
-                  if (!mapSets.containsKey(sucedge.getDestination().id)) {
-                    remstat = false;
-                    break;
-                  }
-                }
-              }
+				mapSets.put(stat.id, set);
 
-              if (remstat) {
-                mapSets.put(pred.id, null);
-              }
-            }
-          }
-        }
-      }
+				if (action != null) {
+					iterate |= action.action(stat, mapSets);
+				}
 
-      if (!iterate) {
-        break;
-      }
-    }
-  }
+				// remove reachability information of fully processed nodes (saves memory)
+				for (StatEdge prededge : stat.getAllPredecessorEdges()) {
+					if ((prededge.getType() & edgetype) != 0) {
+						Statement pred = prededge.getSource();
 
+						if (mapSets.containsKey(pred.id)) {
+							boolean remstat = true;
+							for (StatEdge sucedge : pred.getAllSuccessorEdges()) {
+								if ((sucedge.getType() & edgetype) != 0) {
+									if (!mapSets.containsKey(sucedge.getDestination().id)) {
+										remstat = false;
+										break;
+									}
+								}
+							}
 
-  private interface IReachabilityAction {
-    boolean action(Statement node, HashMap<Integer, FastFixedSet<Integer>> mapSets);
-  }
+							if (remstat) {
+								mapSets.put(pred.id, null);
+							}
+						}
+					}
+				}
+			}
+
+			if (!iterate) {
+				break;
+			}
+		}
+	}
+
+
+	private interface IReachabilityAction {
+		boolean action(Statement node, HashMap<Integer, FastFixedSet<Integer>> mapSets);
+	}
 }

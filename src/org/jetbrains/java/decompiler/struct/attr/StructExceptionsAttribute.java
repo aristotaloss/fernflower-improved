@@ -25,28 +25,27 @@ import java.util.List;
 
 public class StructExceptionsAttribute extends StructGeneralAttribute {
 
-  private List<Integer> throwsExceptions;
+	private List<Integer> throwsExceptions;
 
-  @Override
-  public void initContent(ConstantPool pool) throws IOException {
-    DataInputStream data = stream();
-    int len = data.readUnsignedShort();
-    if (len > 0) {
-      throwsExceptions = new ArrayList<Integer>(len);
-      for (int i = 0; i < len; i++) {
-        throwsExceptions.add(data.readUnsignedShort());
-      }
-    }
-    else {
-      throwsExceptions = Collections.emptyList();
-    }
-  }
+	@Override
+	public void initContent(ConstantPool pool) throws IOException {
+		DataInputStream data = stream();
+		int len = data.readUnsignedShort();
+		if (len > 0) {
+			throwsExceptions = new ArrayList<Integer>(len);
+			for (int i = 0; i < len; i++) {
+				throwsExceptions.add(data.readUnsignedShort());
+			}
+		} else {
+			throwsExceptions = Collections.emptyList();
+		}
+	}
 
-  public String getExcClassname(int index, ConstantPool pool) {
-    return pool.getPrimitiveConstant(throwsExceptions.get(index).intValue()).getString();
-  }
+	public String getExcClassname(int index, ConstantPool pool) {
+		return pool.getPrimitiveConstant(throwsExceptions.get(index).intValue()).getString();
+	}
 
-  public List<Integer> getThrowsExceptions() {
-    return throwsExceptions;
-  }
+	public List<Integer> getThrowsExceptions() {
+		return throwsExceptions;
+	}
 }

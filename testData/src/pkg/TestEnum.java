@@ -13,24 +13,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package pkg;
-
 public enum TestEnum {
-  E1,
-  E2() {
-    @Override
-    public void m() { }
-  },
-  E3("-"),
-  E4("+") {
-    @Override
-    public void m() { }
-  };
+	E1,
+	E2() {
+		@Override
+		public void m() {
+		}
+	},
+	E3("-"),
+	E4("+") {
+		@Override
+		public void m() {
+		}
+	};
 
-  public void m() { }
+	private String s;
 
-  private String s;
+	private TestEnum() {
+		this("?");
+	}
 
-  private TestEnum() { this("?"); }
-  private TestEnum(@Deprecated String s) { this.s = s; }
+	private TestEnum(@Deprecated String s) {
+		this.s = s;
+	}
+
+	public void m() {
+	}
 }

@@ -22,22 +22,21 @@ import java.io.IOException;
 
 public class IINC extends Instruction {
 
-  public void writeToStream(DataOutputStream out, int offset) throws IOException {
-    if (wide) {
-      out.writeByte(opc_wide);
-    }
-    out.writeByte(opc_iinc);
-    if (wide) {
-      out.writeShort(getOperand(0));
-      out.writeShort(getOperand(1));
-    }
-    else {
-      out.writeByte(getOperand(0));
-      out.writeByte(getOperand(1));
-    }
-  }
+	public void writeToStream(DataOutputStream out, int offset) throws IOException {
+		if (wide) {
+			out.writeByte(opc_wide);
+		}
+		out.writeByte(opc_iinc);
+		if (wide) {
+			out.writeShort(getOperand(0));
+			out.writeShort(getOperand(1));
+		} else {
+			out.writeByte(getOperand(0));
+			out.writeByte(getOperand(1));
+		}
+	}
 
-  public int length() {
-    return wide ? 6 : 3;
-  }
+	public int length() {
+		return wide ? 6 : 3;
+	}
 }

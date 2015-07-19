@@ -34,187 +34,186 @@ import java.io.IOException;
 
 public class MethodProcessorRunnable implements Runnable {
 
-  public final Object lock = new Object();
+	public final Object lock = new Object();
 
-  private final StructMethod method;
-  private final VarProcessor varProc;
-  private final DecompilerContext parentContext;
+	private final StructMethod method;
+	private final VarProcessor varProc;
+	private final DecompilerContext parentContext;
 
-  private volatile RootStatement root;
-  private volatile Throwable error;
-  private volatile boolean finished = false;
+	private volatile RootStatement root;
+	private volatile Throwable error;
+	private volatile boolean finished = false;
 
-  public MethodProcessorRunnable(StructMethod method, VarProcessor varProc, DecompilerContext parentContext) {
-    this.method = method;
-    this.varProc = varProc;
-    this.parentContext = parentContext;
-  }
+	public MethodProcessorRunnable(StructMethod method, VarProcessor varProc, DecompilerContext parentContext) {
+		this.method = method;
+		this.varProc = varProc;
+		this.parentContext = parentContext;
+	}
 
-  @Override
-  public void run() {
-    DecompilerContext.setCurrentContext(parentContext);
+	public static RootStatement codeToJava(StructMethod mt, VarProcessor varProc) throws IOException {
+		StructClass cl = mt.getClassStruct();
 
-    error = null;
-    root = null;
+		boolean isInitializer = CodeConstants.CLINIT_NAME.equals(mt.getName()); // for now static initializer only
 
-    try {
-      root = codeToJava(method, varProc);
-    }
-    catch (ThreadDeath ex) {
-      throw ex;
-    }
-    catch (Throwable ex) {
-      error = ex;
-    }
-    finally {
-      DecompilerContext.setCurrentContext(null);
-    }
+		mt.expandData();
+		InstructionSequence seq = mt.getInstructionSequence();
+		ControlFlowGraph graph = new ControlFlowGraph(seq);
 
-    finished = true;
-    synchronized (lock) {
-      lock.notifyAll();
-    }
-  }
+		DeadCodeHelper.removeDeadBlocks(graph);
+		graph.inlineJsr(mt);
 
-  public static RootStatement codeToJava(StructMethod mt, VarProcessor varProc) throws IOException {
-    StructClass cl = mt.getClassStruct();
+		// TODO: move to the start, before jsr inlining
+		DeadCodeHelper.connectDummyExitBlock(graph);
 
-    boolean isInitializer = CodeConstants.CLINIT_NAME.equals(mt.getName()); // for now static initializer only
+		DeadCodeHelper.removeGotos(graph);
 
-    mt.expandData();
-    InstructionSequence seq = mt.getInstructionSequence();
-    ControlFlowGraph graph = new ControlFlowGraph(seq);
+		ExceptionDeobfuscator.removeCircularRanges(graph);
 
-    DeadCodeHelper.removeDeadBlocks(graph);
-    graph.inlineJsr(mt);
+		ExceptionDeobfuscator.restorePopRanges(graph);
 
-    // TODO: move to the start, before jsr inlining
-    DeadCodeHelper.connectDummyExitBlock(graph);
+		if (DecompilerContext.getOption(IFernflowerPreferences.REMOVE_EMPTY_RANGES)) {
+			ExceptionDeobfuscator.removeEmptyRanges(graph);
+		}
 
-    DeadCodeHelper.removeGotos(graph);
+		if (DecompilerContext.getOption(IFernflowerPreferences.NO_EXCEPTIONS_RETURN)) {
+			// special case: single return instruction outside of a protected range
+			DeadCodeHelper.incorporateValueReturns(graph);
+		}
 
-    ExceptionDeobfuscator.removeCircularRanges(graph);
+		//		ExceptionDeobfuscator.restorePopRanges(graph);
+		ExceptionDeobfuscator.insertEmptyExceptionHandlerBlocks(graph);
 
-    ExceptionDeobfuscator.restorePopRanges(graph);
+		DeadCodeHelper.mergeBasicBlocks(graph);
 
-    if (DecompilerContext.getOption(IFernflowerPreferences.REMOVE_EMPTY_RANGES)) {
-      ExceptionDeobfuscator.removeEmptyRanges(graph);
-    }
+		DecompilerContext.getCounterContainer().setCounter(CounterContainer.VAR_COUNTER, mt.getLocalVariables());
 
-    if (DecompilerContext.getOption(IFernflowerPreferences.NO_EXCEPTIONS_RETURN)) {
-      // special case: single return instruction outside of a protected range
-      DeadCodeHelper.incorporateValueReturns(graph);
-    }
+		if (ExceptionDeobfuscator.hasObfuscatedExceptions(graph)) {
+			DecompilerContext.getLogger().writeMessage("Heavily obfuscated exception ranges found!", IFernflowerLogger.Severity.WARN);
+		}
 
-    //		ExceptionDeobfuscator.restorePopRanges(graph);
-    ExceptionDeobfuscator.insertEmptyExceptionHandlerBlocks(graph);
+		RootStatement root = DomHelper.parseGraph(graph);
 
-    DeadCodeHelper.mergeBasicBlocks(graph);
+		FinallyProcessor fProc = new FinallyProcessor(varProc);
+		while (fProc.iterateGraph(mt, root, graph)) {
+			root = DomHelper.parseGraph(graph);
+		}
 
-    DecompilerContext.getCounterContainer().setCounter(CounterContainer.VAR_COUNTER, mt.getLocalVariables());
+		// remove synchronized exception handler
+		// not until now because of comparison between synchronized statements in the finally cycle
+		DomHelper.removeSynchronizedHandler(root);
 
-    if (ExceptionDeobfuscator.hasObfuscatedExceptions(graph)) {
-      DecompilerContext.getLogger().writeMessage("Heavily obfuscated exception ranges found!", IFernflowerLogger.Severity.WARN);
-    }
+		//		LabelHelper.lowContinueLabels(root, new HashSet<StatEdge>());
 
-    RootStatement root = DomHelper.parseGraph(graph);
+		SequenceHelper.condenseSequences(root);
 
-    FinallyProcessor fProc = new FinallyProcessor(varProc);
-    while (fProc.iterateGraph(mt, root, graph)) {
-      root = DomHelper.parseGraph(graph);
-    }
+		ClearStructHelper.clearStatements(root);
 
-    // remove synchronized exception handler
-    // not until now because of comparison between synchronized statements in the finally cycle
-    DomHelper.removeSynchronizedHandler(root);
+		ExprProcessor proc = new ExprProcessor();
+		proc.processStatement(root, cl);
 
-    //		LabelHelper.lowContinueLabels(root, new HashSet<StatEdge>());
+		SequenceHelper.condenseSequences(root);
 
-    SequenceHelper.condenseSequences(root);
+		while (true) {
+			StackVarsProcessor stackProc = new StackVarsProcessor();
+			stackProc.simplifyStackVars(root, mt, cl);
 
-    ClearStructHelper.clearStatements(root);
+			varProc.setVarVersions(root);
 
-    ExprProcessor proc = new ExprProcessor();
-    proc.processStatement(root, cl);
+			if (!new PPandMMHelper().findPPandMM(root)) {
+				break;
+			}
+		}
 
-    SequenceHelper.condenseSequences(root);
-    
-    while (true) {
-      StackVarsProcessor stackProc = new StackVarsProcessor();
-      stackProc.simplifyStackVars(root, mt, cl);
+		while (true) {
+			LabelHelper.cleanUpEdges(root);
 
-      varProc.setVarVersions(root);
+			while (true) {
+				MergeHelper.enhanceLoops(root);
 
-      if (!new PPandMMHelper().findPPandMM(root)) {
-        break;
-      }
-    }
+				if (LoopExtractHelper.extractLoops(root)) {
+					continue;
+				}
 
-    while (true) {
-      LabelHelper.cleanUpEdges(root);
+				if (!IfHelper.mergeAllIfs(root)) {
+					break;
+				}
+			}
 
-      while (true) {
-        MergeHelper.enhanceLoops(root);
+			if (DecompilerContext.getOption(IFernflowerPreferences.IDEA_NOT_NULL_ANNOTATION)) {
+				if (IdeaNotNullHelper.removeHardcodedChecks(root, mt)) {
+					SequenceHelper.condenseSequences(root);
 
-        if (LoopExtractHelper.extractLoops(root)) {
-          continue;
-        }
+					StackVarsProcessor stackProc = new StackVarsProcessor();
+					stackProc.simplifyStackVars(root, mt, cl);
 
-        if (!IfHelper.mergeAllIfs(root)) {
-          break;
-        }
-      }
+					varProc.setVarVersions(root);
+				}
+			}
 
-      if (DecompilerContext.getOption(IFernflowerPreferences.IDEA_NOT_NULL_ANNOTATION)) {
-        if (IdeaNotNullHelper.removeHardcodedChecks(root, mt)) {
-          SequenceHelper.condenseSequences(root);
+			LabelHelper.identifyLabels(root);
 
-          StackVarsProcessor stackProc = new StackVarsProcessor();
-          stackProc.simplifyStackVars(root, mt, cl);
+			if (InlineSingleBlockHelper.inlineSingleBlocks(root)) {
+				continue;
+			}
 
-          varProc.setVarVersions(root);
-        }
-      }
+			// initializer may have at most one return point, so no transformation of method exits permitted
+			if (isInitializer || !ExitHelper.condenseExits(root)) {
+				break;
+			}
 
-      LabelHelper.identifyLabels(root);
+			// FIXME: !!
+			//			if(!EliminateLoopsHelper.eliminateLoops(root)) {
+			//				break;
+			//			}
+		}
 
-      if (InlineSingleBlockHelper.inlineSingleBlocks(root)) {
-        continue;
-      }
+		ExitHelper.removeRedundantReturns(root);
 
-      // initializer may have at most one return point, so no transformation of method exits permitted
-      if (isInitializer || !ExitHelper.condenseExits(root)) {
-        break;
-      }
+		SecondaryFunctionsHelper.identifySecondaryFunctions(root);
 
-      // FIXME: !!
-      //			if(!EliminateLoopsHelper.eliminateLoops(root)) {
-      //				break;
-      //			}
-    }
+		varProc.setVarDefinitions(root);
 
-    ExitHelper.removeRedundantReturns(root);
+		// must be the last invocation, because it makes the statement structure inconsistent
+		// FIXME: new edge type needed
+		LabelHelper.replaceContinueWithBreak(root);
 
-    SecondaryFunctionsHelper.identifySecondaryFunctions(root);
+		mt.releaseResources();
 
-    varProc.setVarDefinitions(root);
+		return root;
+	}
 
-    // must be the last invocation, because it makes the statement structure inconsistent
-    // FIXME: new edge type needed
-    LabelHelper.replaceContinueWithBreak(root);
+	@Override
+	public void run() {
+		DecompilerContext.setCurrentContext(parentContext);
 
-    mt.releaseResources();
+		error = null;
+		root = null;
 
-    return root;
-  }
+		try {
+			root = codeToJava(method, varProc);
+		} catch (ThreadDeath ex) {
+			throw ex;
+		} catch (Throwable ex) {
+			error = ex;
+		} finally {
+			DecompilerContext.setCurrentContext(null);
+		}
 
-  public RootStatement getResult() throws Throwable {
-    Throwable t = error;
-    if (t != null) throw t;
-    return root;
-  }
+		finished = true;
+		synchronized (lock) {
+			lock.notifyAll();
+		}
+	}
 
-  public boolean isFinished() {
-    return finished;
-  }
+	public RootStatement getResult() throws Throwable {
+		Throwable t = error;
+		if (t != null) {
+			throw t;
+		}
+		return root;
+	}
+
+	public boolean isFinished() {
+		return finished;
+	}
 }

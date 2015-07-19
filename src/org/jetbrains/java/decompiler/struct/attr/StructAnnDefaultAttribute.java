@@ -22,14 +22,14 @@ import java.io.IOException;
 
 public class StructAnnDefaultAttribute extends StructGeneralAttribute {
 
-  private Exprent defaultValue;
+	private Exprent defaultValue;
 
-  @Override
-  public void initContent(ConstantPool pool) throws IOException {
-    defaultValue = StructAnnotationAttribute.parseAnnotationElement(stream(), pool);
-  }
+	@Override
+	public void initContent(ConstantPool pool) throws IOException {
+		defaultValue = StructAnnotationAttribute.parseAnnotationElement(stream(), pool);
+	}
 
-  public Exprent getDefaultValue() {
-    return defaultValue;
-  }
+	public Exprent getDefaultValue() {
+		return defaultValue;
+	}
 }

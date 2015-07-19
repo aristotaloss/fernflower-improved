@@ -23,122 +23,124 @@ import java.util.List;
 
 public class MethodDescriptor {
 
-  public final VarType[] params;
-  public final VarType ret;
+	public final VarType[] params;
+	public final VarType ret;
 
-  private MethodDescriptor(VarType[] params, VarType ret) {
-    this.params = params;
-    this.ret = ret;
-  }
+	private MethodDescriptor(VarType[] params, VarType ret) {
+		this.params = params;
+		this.ret = ret;
+	}
 
-  public static MethodDescriptor parseDescriptor(String descriptor) {
-    int parenth = descriptor.lastIndexOf(')');
-    if (descriptor.length() < 2 || parenth < 0 || descriptor.charAt(0) != '(') {
-      throw new IllegalArgumentException("Invalid descriptor: " + descriptor);
-    }
+	public static MethodDescriptor parseDescriptor(String descriptor) {
+		int parenth = descriptor.lastIndexOf(')');
+		if (descriptor.length() < 2 || parenth < 0 || descriptor.charAt(0) != '(') {
+			throw new IllegalArgumentException("Invalid descriptor: " + descriptor);
+		}
 
-    VarType[] params;
+		VarType[] params;
 
-    if (parenth > 1) {
-      String parameters = descriptor.substring(1, parenth);
-      List<String> lst = new ArrayList<String>();
+		if (parenth > 1) {
+			String parameters = descriptor.substring(1, parenth);
+			List<String> lst = new ArrayList<String>();
 
-      int indexFrom = -1, ind, len = parameters.length(), index = 0;
-      while (index < len) {
-        switch (parameters.charAt(index)) {
-          case '[':
-            if (indexFrom < 0) {
-              indexFrom = index;
-            }
-            break;
-          case 'L':
-            ind = parameters.indexOf(";", index);
-            lst.add(parameters.substring(indexFrom < 0 ? index : indexFrom, ind + 1));
-            index = ind;
-            indexFrom = -1;
-            break;
-          default:
-            lst.add(parameters.substring(indexFrom < 0 ? index : indexFrom, index + 1));
-            indexFrom = -1;
-        }
-        index++;
-      }
+			int indexFrom = -1, ind, len = parameters.length(), index = 0;
+			while (index < len) {
+				switch (parameters.charAt(index)) {
+					case '[':
+						if (indexFrom < 0) {
+							indexFrom = index;
+						}
+						break;
+					case 'L':
+						ind = parameters.indexOf(";", index);
+						lst.add(parameters.substring(indexFrom < 0 ? index : indexFrom, ind + 1));
+						index = ind;
+						indexFrom = -1;
+						break;
+					default:
+						lst.add(parameters.substring(indexFrom < 0 ? index : indexFrom, index + 1));
+						indexFrom = -1;
+				}
+				index++;
+			}
 
-      params = new VarType[lst.size()];
-      for (int i = 0; i < lst.size(); i++) {
-        params[i] = new VarType(lst.get(i));
-      }
-    }
-    else {
-      params = VarType.EMPTY_ARRAY;
-    }
+			params = new VarType[lst.size()];
+			for (int i = 0; i < lst.size(); i++) {
+				params[i] = new VarType(lst.get(i));
+			}
+		} else {
+			params = VarType.EMPTY_ARRAY;
+		}
 
-    VarType ret = new VarType(descriptor.substring(parenth + 1));
+		VarType ret = new VarType(descriptor.substring(parenth + 1));
 
-    return new MethodDescriptor(params, ret);
-  }
+		return new MethodDescriptor(params, ret);
+	}
 
-  public String buildNewDescriptor(NewClassNameBuilder builder) {
-    boolean updated = false;
+	private static VarType buildNewType(VarType type, NewClassNameBuilder builder) {
+		if (type.type == CodeConstants.TYPE_OBJECT) {
+			String newClassName = builder.buildNewClassname(type.value);
+			if (newClassName != null) {
+				return new VarType(type.type, type.arrayDim, newClassName);
+			}
+		}
+		return null;
+	}
 
-    VarType[] newParams;
-    if (params.length > 0) {
-      newParams = new VarType[params.length];
-      System.arraycopy(params, 0, newParams, 0, params.length);
-      for (int i = 0; i < params.length; i++) {
-        VarType substitute = buildNewType(params[i], builder);
-        if (substitute != null) {
-          newParams[i] = substitute;
-          updated = true;
-        }
-      }
-    }
-    else {
-      newParams = VarType.EMPTY_ARRAY;
-    }
+	public String buildNewDescriptor(NewClassNameBuilder builder) {
+		boolean updated = false;
 
-    VarType newRet = ret;
-    VarType substitute = buildNewType(ret, builder);
-    if (substitute != null) {
-      newRet = substitute;
-      updated = true;
-    }
+		VarType[] newParams;
+		if (params.length > 0) {
+			newParams = new VarType[params.length];
+			System.arraycopy(params, 0, newParams, 0, params.length);
+			for (int i = 0; i < params.length; i++) {
+				VarType substitute = buildNewType(params[i], builder);
+				if (substitute != null) {
+					newParams[i] = substitute;
+					updated = true;
+				}
+			}
+		} else {
+			newParams = VarType.EMPTY_ARRAY;
+		}
 
-    if (updated) {
-      StringBuilder res = new StringBuilder("(");
-      for (VarType param : newParams) {
-        res.append(param);
-      }
-      res.append(")").append(newRet.toString());
-      return res.toString();
-    }
+		VarType newRet = ret;
+		VarType substitute = buildNewType(ret, builder);
+		if (substitute != null) {
+			newRet = substitute;
+			updated = true;
+		}
 
-    return null;
-  }
+		if (updated) {
+			StringBuilder res = new StringBuilder("(");
+			for (VarType param : newParams) {
+				res.append(param);
+			}
+			res.append(")").append(newRet.toString());
+			return res.toString();
+		}
 
-  private static VarType buildNewType(VarType type, NewClassNameBuilder builder) {
-    if (type.type == CodeConstants.TYPE_OBJECT) {
-      String newClassName = builder.buildNewClassname(type.value);
-      if (newClassName != null) {
-        return new VarType(type.type, type.arrayDim, newClassName);
-      }
-    }
-    return null;
-  }
+		return null;
+	}
 
-  @Override
-  public boolean equals(Object o) {
-    if (o == this) return true;
-    if (o == null || !(o instanceof MethodDescriptor)) return false;
+	@Override
+	public boolean equals(Object o) {
+		if (o == this) {
+			return true;
+		}
+		if (o == null || !(o instanceof MethodDescriptor)) {
+			return false;
+		}
 
-    MethodDescriptor md = (MethodDescriptor)o;
-    return ret.equals(md.ret) && Arrays.equals(params, md.params);
-  }
+		MethodDescriptor md = (MethodDescriptor) o;
+		return ret.equals(md.ret) && Arrays.equals(params, md.params);
+	}
 
-  @Override
-  public int hashCode() {
-    int result = ret.hashCode();
-    result = 31 * result + params.length;
-    return result;
-  }
+	@Override
+	public int hashCode() {
+		int result = ret.hashCode();
+		result = 31 * result + params.length;
+		return result;
+	}
 }

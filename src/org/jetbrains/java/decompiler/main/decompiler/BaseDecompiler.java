@@ -26,22 +26,21 @@ import java.util.Map;
 
 public class BaseDecompiler {
 
-  private final Fernflower fernflower;
+	private final Fernflower fernflower;
 
-  public BaseDecompiler(IBytecodeProvider provider, IResultSaver saver, Map<String, Object> options, IFernflowerLogger logger) {
-    fernflower = new Fernflower(provider, saver, options, logger);
-  }
+	public BaseDecompiler(IBytecodeProvider provider, IResultSaver saver, Map<String, Object> options, IFernflowerLogger logger) {
+		fernflower = new Fernflower(provider, saver, options, logger);
+	}
 
-  public void addSpace(File file, boolean isOwn) throws IOException {
-    fernflower.getStructContext().addSpace(file, isOwn);
-  }
+	public void addSpace(File file, boolean isOwn) throws IOException {
+		fernflower.getStructContext().addSpace(file, isOwn);
+	}
 
-  public void decompileContext() {
-    try {
-      fernflower.decompileContext();
-    }
-    finally {
-      fernflower.clearContext();
-    }
-  }
+	public void decompileContext() {
+		try {
+			fernflower.decompileContext();
+		} finally {
+			fernflower.clearContext();
+		}
+	}
 }

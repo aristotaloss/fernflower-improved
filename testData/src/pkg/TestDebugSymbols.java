@@ -13,15 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package pkg;
 
 // need to be compiled with debug info
 class TestDebugSymbols {
-  private int m() {
-    String text = "text";
-    long prolonged = 42L;
-    float decimated = prolonged / 10.0f;
-    double doubled = 2 * decimated;
-    return (text + ":" + prolonged + ":" + decimated + ":" + doubled).length();
-  }
+	private int m() {
+		String text = "text";
+		long prolonged = 42L;
+		float decimated = prolonged / 10.0f;
+		double doubled = 2 * decimated;
+		return (text + ":" + prolonged + ":" + decimated + ":" + doubled).length();
+	}
 }

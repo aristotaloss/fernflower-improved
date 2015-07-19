@@ -13,15 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package pkg;
-
 class TestCodeConstructs {
-  void expressions() {
-    new String().hashCode();
-  }
+	private int count = 0;
 
-  private int count = 0;
-  Integer fieldIncrement() {
-    return new Integer(count++);
-  }
+	void expressions() {
+		new String().hashCode();
+	}
+
+	Integer fieldIncrement() {
+		return new Integer(count++);
+	}
 }

@@ -23,20 +23,19 @@ import java.util.Set;
  * @author egor
  */
 public class DummyExitStatement extends Statement {
-  public Set<Integer> bytecode = null;  // offsets of bytecode instructions mapped to dummy exit
+	public Set<Integer> bytecode = null;  // offsets of bytecode instructions mapped to dummy exit
 
-  public DummyExitStatement() {
-    type = Statement.TYPE_DUMMYEXIT;
-  }
+	public DummyExitStatement() {
+		type = Statement.TYPE_DUMMYEXIT;
+	}
 
-  public void addBytecodeOffsets(Collection<Integer> bytecodeOffsets) {
-    if (bytecodeOffsets != null && !bytecodeOffsets.isEmpty()) {
-      if (bytecode == null) {
-        bytecode = new HashSet<Integer>(bytecodeOffsets);
-      }
-      else {
-        bytecode.addAll(bytecodeOffsets);
-      }
-    }
-  }
+	public void addBytecodeOffsets(Collection<Integer> bytecodeOffsets) {
+		if (bytecodeOffsets != null && !bytecodeOffsets.isEmpty()) {
+			if (bytecode == null) {
+				bytecode = new HashSet<Integer>(bytecodeOffsets);
+			} else {
+				bytecode.addAll(bytecodeOffsets);
+			}
+		}
+	}
 }

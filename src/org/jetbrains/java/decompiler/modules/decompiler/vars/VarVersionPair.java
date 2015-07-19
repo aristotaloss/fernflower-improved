@@ -19,45 +19,49 @@ import org.jetbrains.java.decompiler.modules.decompiler.exps.VarExprent;
 
 public class VarVersionPair {
 
-  public final int var;
-  public final int version;
+	public final int var;
+	public final int version;
 
-  private int hashCode = -1;
+	private int hashCode = -1;
 
-  public VarVersionPair(int var, int version) {
-    this.var = var;
-    this.version = version;
-  }
+	public VarVersionPair(int var, int version) {
+		this.var = var;
+		this.version = version;
+	}
 
-  public VarVersionPair(Integer var, Integer version) {
-    this.var = var.intValue();
-    this.version = version.intValue();
-  }
+	public VarVersionPair(Integer var, Integer version) {
+		this.var = var.intValue();
+		this.version = version.intValue();
+	}
 
-  public VarVersionPair(VarExprent var) {
-    this.var = var.getIndex();
-    this.version = var.getVersion();
-  }
+	public VarVersionPair(VarExprent var) {
+		this.var = var.getIndex();
+		this.version = var.getVersion();
+	}
 
-  @Override
-  public boolean equals(Object o) {
-    if (o == this) return true;
-    if (o == null || !(o instanceof VarVersionPair)) return false;
+	@Override
+	public boolean equals(Object o) {
+		if (o == this) {
+			return true;
+		}
+		if (o == null || !(o instanceof VarVersionPair)) {
+			return false;
+		}
 
-    VarVersionPair paar = (VarVersionPair)o;
-    return var == paar.var && version == paar.version;
-  }
+		VarVersionPair paar = (VarVersionPair) o;
+		return var == paar.var && version == paar.version;
+	}
 
-  @Override
-  public int hashCode() {
-    if (hashCode == -1) {
-      hashCode = this.var * 3 + this.version;
-    }
-    return hashCode;
-  }
+	@Override
+	public int hashCode() {
+		if (hashCode == -1) {
+			hashCode = this.var * 3 + this.version;
+		}
+		return hashCode;
+	}
 
-  @Override
-  public String toString() {
-    return "(" + var + "," + version + ")";
-  }
+	@Override
+	public String toString() {
+		return "(" + var + "," + version + ")";
+	}
 }

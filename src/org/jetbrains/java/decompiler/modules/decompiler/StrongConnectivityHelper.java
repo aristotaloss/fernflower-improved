@@ -63,145 +63,143 @@ import java.util.List;
 
 public class StrongConnectivityHelper {
 
-  private ListStack<Statement> lstack;
+	private ListStack<Statement> lstack;
 
-  private int ncounter;
+	private int ncounter;
 
-  private HashSet<Statement> tset;
-  private HashMap<Statement, Integer> dfsnummap;
-  private HashMap<Statement, Integer> lowmap;
+	private HashSet<Statement> tset;
+	private HashMap<Statement, Integer> dfsnummap;
+	private HashMap<Statement, Integer> lowmap;
 
-  private List<List<Statement>> components;
+	private List<List<Statement>> components;
 
-  private HashSet<Statement> setProcessed;
+	private HashSet<Statement> setProcessed;
 
-  // *****************************************************************************
-  // constructors
-  // *****************************************************************************
+	// *****************************************************************************
+	// constructors
+	// *****************************************************************************
 
-  public StrongConnectivityHelper() {
-  }
+	public StrongConnectivityHelper() {
+	}
 
-  public StrongConnectivityHelper(Statement stat) {
-    findComponents(stat);
-  }
+	public StrongConnectivityHelper(Statement stat) {
+		findComponents(stat);
+	}
 
-  // *****************************************************************************
-  // public methods
-  // *****************************************************************************
+	// *****************************************************************************
+	// public methods
+	// *****************************************************************************
 
-  public List<List<Statement>> findComponents(Statement stat) {
+	public static boolean isExitComponent(List<Statement> lst) {
 
-    components = new ArrayList<List<Statement>>();
-    setProcessed = new HashSet<Statement>();
+		HashSet<Statement> set = new HashSet<Statement>();
+		for (Statement stat : lst) {
+			set.addAll(stat.getNeighbours(StatEdge.TYPE_REGULAR, Statement.DIRECTION_FORWARD));
+		}
+		set.removeAll(lst);
 
-    visitTree(stat.getFirst());
+		return (set.size() == 0);
+	}
 
-    for (Statement st : stat.getStats()) {
-      if (!setProcessed.contains(st) && st.getPredecessorEdges(Statement.STATEDGE_DIRECT_ALL).isEmpty()) {
-        visitTree(st);
-      }
-    }
+	public static List<Statement> getExitReps(List<List<Statement>> lst) {
 
-    // should not find any more nodes! FIXME: ??
-    for (Statement st : stat.getStats()) {
-      if (!setProcessed.contains(st)) {
-        visitTree(st);
-      }
-    }
+		List<Statement> res = new ArrayList<Statement>();
 
-    return components;
-  }
+		for (List<Statement> comp : lst) {
+			if (isExitComponent(comp)) {
+				res.add(comp.get(0));
+			}
+		}
 
-  public static boolean isExitComponent(List<Statement> lst) {
+		return res;
+	}
 
-    HashSet<Statement> set = new HashSet<Statement>();
-    for (Statement stat : lst) {
-      set.addAll(stat.getNeighbours(StatEdge.TYPE_REGULAR, Statement.DIRECTION_FORWARD));
-    }
-    set.removeAll(lst);
+	public List<List<Statement>> findComponents(Statement stat) {
 
-    return (set.size() == 0);
-  }
+		components = new ArrayList<List<Statement>>();
+		setProcessed = new HashSet<Statement>();
 
-  public static List<Statement> getExitReps(List<List<Statement>> lst) {
+		visitTree(stat.getFirst());
 
-    List<Statement> res = new ArrayList<Statement>();
+		for (Statement st : stat.getStats()) {
+			if (!setProcessed.contains(st) && st.getPredecessorEdges(Statement.STATEDGE_DIRECT_ALL).isEmpty()) {
+				visitTree(st);
+			}
+		}
 
-    for (List<Statement> comp : lst) {
-      if (isExitComponent(comp)) {
-        res.add(comp.get(0));
-      }
-    }
+		// should not find any more nodes! FIXME: ??
+		for (Statement st : stat.getStats()) {
+			if (!setProcessed.contains(st)) {
+				visitTree(st);
+			}
+		}
 
-    return res;
-  }
+		return components;
+	}
 
-  // *****************************************************************************
-  // private methods
-  // *****************************************************************************
+	// *****************************************************************************
+	// private methods
+	// *****************************************************************************
 
-  private void visitTree(Statement stat) {
-    lstack = new ListStack<Statement>();
-    ncounter = 0;
-    tset = new HashSet<Statement>();
-    dfsnummap = new HashMap<Statement, Integer>();
-    lowmap = new HashMap<Statement, Integer>();
+	private void visitTree(Statement stat) {
+		lstack = new ListStack<Statement>();
+		ncounter = 0;
+		tset = new HashSet<Statement>();
+		dfsnummap = new HashMap<Statement, Integer>();
+		lowmap = new HashMap<Statement, Integer>();
 
-    visit(stat);
+		visit(stat);
 
-    setProcessed.addAll(tset);
-    setProcessed.add(stat);
-  }
+		setProcessed.addAll(tset);
+		setProcessed.add(stat);
+	}
 
-  private void visit(Statement stat) {
+	private void visit(Statement stat) {
 
-    lstack.push(stat);
-    dfsnummap.put(stat, ncounter);
-    lowmap.put(stat, ncounter);
-    ncounter++;
+		lstack.push(stat);
+		dfsnummap.put(stat, ncounter);
+		lowmap.put(stat, ncounter);
+		ncounter++;
 
-    List<Statement> lstSuccs = stat.getNeighbours(StatEdge.TYPE_REGULAR, Statement.DIRECTION_FORWARD); // TODO: set?
-    lstSuccs.removeAll(setProcessed);
+		List<Statement> lstSuccs = stat.getNeighbours(StatEdge.TYPE_REGULAR, Statement.DIRECTION_FORWARD); // TODO: set?
+		lstSuccs.removeAll(setProcessed);
 
-    for (int i = 0; i < lstSuccs.size(); i++) {
-      Statement succ = lstSuccs.get(i);
-      int secvalue;
+		for (int i = 0; i < lstSuccs.size(); i++) {
+			Statement succ = lstSuccs.get(i);
+			int secvalue;
 
-      if (tset.contains(succ)) {
-        secvalue = dfsnummap.get(succ);
-      }
-      else {
-        tset.add(succ);
-        visit(succ);
-        secvalue = lowmap.get(succ);
-      }
-      lowmap.put(stat, Math.min(lowmap.get(stat), secvalue));
-    }
-
-
-    if (lowmap.get(stat).intValue() == dfsnummap.get(stat).intValue()) {
-      List<Statement> lst = new ArrayList<Statement>();
-      Statement v;
-      do {
-        v = lstack.pop();
-        lst.add(v);
-      }
-      while (v != stat);
-      components.add(lst);
-    }
-  }
+			if (tset.contains(succ)) {
+				secvalue = dfsnummap.get(succ);
+			} else {
+				tset.add(succ);
+				visit(succ);
+				secvalue = lowmap.get(succ);
+			}
+			lowmap.put(stat, Math.min(lowmap.get(stat), secvalue));
+		}
 
 
-  // *****************************************************************************
-  // getter and setter methods
-  // *****************************************************************************
+		if (lowmap.get(stat).intValue() == dfsnummap.get(stat).intValue()) {
+			List<Statement> lst = new ArrayList<Statement>();
+			Statement v;
+			do {
+				v = lstack.pop();
+				lst.add(v);
+			} while (v != stat);
+			components.add(lst);
+		}
+	}
 
-  public List<List<Statement>> getComponents() {
-    return components;
-  }
 
-  public void setComponents(List<List<Statement>> components) {
-    this.components = components;
-  }
+	// *****************************************************************************
+	// getter and setter methods
+	// *****************************************************************************
+
+	public List<List<Statement>> getComponents() {
+		return components;
+	}
+
+	public void setComponents(List<List<Statement>> components) {
+		this.components = components;
+	}
 }

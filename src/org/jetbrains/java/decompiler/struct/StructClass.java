@@ -16,14 +16,19 @@
 package org.jetbrains.java.decompiler.struct;
 
 import org.jetbrains.java.decompiler.code.CodeConstants;
+import org.jetbrains.java.decompiler.main.DecompilerContext;
+import org.jetbrains.java.decompiler.main.extern.IFernflowerPreferences;
 import org.jetbrains.java.decompiler.struct.consts.ConstantPool;
 import org.jetbrains.java.decompiler.struct.consts.PrimitiveConstant;
 import org.jetbrains.java.decompiler.struct.lazy.LazyLoader;
 import org.jetbrains.java.decompiler.util.DataInputFullStream;
+import org.jetbrains.java.decompiler.util.FieldOrder;
 import org.jetbrains.java.decompiler.util.InterpreterUtil;
 import org.jetbrains.java.decompiler.util.VBStyleCollection;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /*
   class_file {
@@ -47,149 +52,192 @@ import java.io.IOException;
 */
 public class StructClass extends StructMember {
 
-  public final String qualifiedName;
-  public final PrimitiveConstant superClass;
+	public final String qualifiedName;
+	public final PrimitiveConstant superClass;
 
-  private final boolean own;
-  private final LazyLoader loader;
-  private final int minorVersion;
-  private final int majorVersion;
-  private final int[] interfaces;
-  private final String[] interfaceNames;
-  private final VBStyleCollection<StructField, String> fields;
-  private final VBStyleCollection<StructMethod, String> methods;
+	private final boolean own;
+	private final LazyLoader loader;
+	private final int minorVersion;
+	private final int majorVersion;
+	private final int[] interfaces;
+	private final String[] interfaceNames;
+	private final VBStyleCollection<StructField, String> fields;
+	private final VBStyleCollection<StructMethod, String> methods;
 
-  private ConstantPool pool;
+	private ConstantPool pool;
 
-  public StructClass(byte[] bytes, boolean own, LazyLoader loader) throws IOException {
-    this(new DataInputFullStream(bytes), own, loader);
-  }
+	public StructClass(byte[] bytes, boolean own, LazyLoader loader) throws IOException {
+		this(new DataInputFullStream(bytes), own, loader);
+	}
 
-  public StructClass(DataInputFullStream in, boolean own, LazyLoader loader) throws IOException {
-    this.own = own;
-    this.loader = loader;
+	public StructClass(DataInputFullStream in, boolean own, LazyLoader loader) throws IOException {
+		this.own = own;
+		this.loader = loader;
 
-    in.discard(4);
+		in.discard(4);
 
-    minorVersion = in.readUnsignedShort();
-    majorVersion = in.readUnsignedShort();
+		minorVersion = in.readUnsignedShort();
+		majorVersion = in.readUnsignedShort();
 
-    pool = new ConstantPool(in);
+		pool = new ConstantPool(in);
 
-    accessFlags = in.readUnsignedShort();
-    int thisClassIdx = in.readUnsignedShort();
-    int superClassIdx = in.readUnsignedShort();
-    qualifiedName = pool.getPrimitiveConstant(thisClassIdx).getString();
-    superClass = pool.getPrimitiveConstant(superClassIdx);
+		accessFlags = in.readUnsignedShort();
+		int thisClassIdx = in.readUnsignedShort();
+		int superClassIdx = in.readUnsignedShort();
+		qualifiedName = pool.getPrimitiveConstant(thisClassIdx).getString();
+		superClass = pool.getPrimitiveConstant(superClassIdx);
 
-    // interfaces
-    int length = in.readUnsignedShort();
-    interfaces = new int[length];
-    interfaceNames = new String[length];
-    for (int i = 0; i < length; i++) {
-      interfaces[i] = in.readUnsignedShort();
-      interfaceNames[i] = pool.getPrimitiveConstant(interfaces[i]).getString();
-    }
+		// interfaces
+		int length = in.readUnsignedShort();
+		interfaces = new int[length];
+		interfaceNames = new String[length];
+		for (int i = 0; i < length; i++) {
+			interfaces[i] = in.readUnsignedShort();
+			interfaceNames[i] = pool.getPrimitiveConstant(interfaces[i]).getString();
+		}
 
-    // fields
-    length = in.readUnsignedShort();
-    fields = new VBStyleCollection<StructField, String>();
-    for (int i = 0; i < length; i++) {
-      StructField field = new StructField(in, this);
-      fields.addWithKey(field, InterpreterUtil.makeUniqueKey(field.getName(), field.getDescriptor()));
-    }
+		// fields
+		length = in.readUnsignedShort();
+		fields = new VBStyleCollection<StructField, String>();
+		for (int i = 0; i < length; i++) {
+			StructField field = new StructField(in, this);
+			//System.out.println(field.getName());
+			fields.addWithKey(field, InterpreterUtil.makeUniqueKey(field.getName(), field.getDescriptor()));
+		}
 
-    // methods
-    length = in.readUnsignedShort();
-    methods = new VBStyleCollection<StructMethod, String>();
-    for (int i = 0; i < length; i++) {
-      StructMethod method = new StructMethod(in, this);
-      methods.addWithKey(method, InterpreterUtil.makeUniqueKey(method.getName(), method.getDescriptor()));
-    }
+		// methods
+		length = in.readUnsignedShort();
+		methods = new VBStyleCollection<StructMethod, String>();
+		for (int i = 0; i < length; i++) {
+			StructMethod method = new StructMethod(in, this);
+			methods.addWithKey(method, InterpreterUtil.makeUniqueKey(method.getName(), method.getDescriptor()));
+		}
 
-    // attributes
-    attributes = readAttributes(in, pool);
+		// attributes
+		attributes = readAttributes(in, pool);
 
-    releaseResources();
-  }
+		releaseResources();
+	}
 
-  public boolean hasField(String name, String descriptor) {
-    return getField(name, descriptor) != null;
-  }
+	public boolean hasField(String name, String descriptor) {
+		return getField(name, descriptor) != null;
+	}
 
-  public StructField getField(String name, String descriptor) {
-    return fields.getWithKey(InterpreterUtil.makeUniqueKey(name, descriptor));
-  }
+	public StructField getField(String name, String descriptor) {
+		return fields.getWithKey(InterpreterUtil.makeUniqueKey(name, descriptor));
+	}
 
-  public StructMethod getMethod(String key) {
-    return methods.getWithKey(key);
-  }
+	public StructMethod getMethod(String key) {
+		return methods.getWithKey(key);
+	}
 
-  public StructMethod getMethod(String name, String descriptor) {
-    return methods.getWithKey(InterpreterUtil.makeUniqueKey(name, descriptor));
-  }
+	public StructMethod getMethod(String name, String descriptor) {
+		return methods.getWithKey(InterpreterUtil.makeUniqueKey(name, descriptor));
+	}
 
-  public String getInterface(int i) {
-    return interfaceNames[i];
-  }
+	public String getInterface(int i) {
+		return interfaceNames[i];
+	}
 
-  public void releaseResources() {
-    if (loader != null) {
-      pool = null;
-    }
-  }
+	public void releaseResources() {
+		if (loader != null) {
+			pool = null;
+		}
+	}
 
-  public ConstantPool getPool() {
-    if (pool == null && loader != null) {
-      pool = loader.loadPool(qualifiedName);
-    }
-    return pool;
-  }
+	public ConstantPool getPool() {
+		if (pool == null && loader != null) {
+			pool = loader.loadPool(qualifiedName);
+		}
+		return pool;
+	}
 
-  public int[] getInterfaces() {
-    return interfaces;
-  }
+	public int[] getInterfaces() {
+		return interfaces;
+	}
 
-  public String[] getInterfaceNames() {
-    return interfaceNames;
-  }
+	public String[] getInterfaceNames() {
+		return interfaceNames;
+	}
 
-  public VBStyleCollection<StructMethod, String> getMethods() {
-    return methods;
-  }
+	public VBStyleCollection<StructMethod, String> getMethods() {
+		return methods;
+	}
 
-  public VBStyleCollection<StructField, String> getFields() {
-    return fields;
-  }
+	public VBStyleCollection<StructField, String> getFields() {
+		if (DecompilerContext.getOption(IFernflowerPreferences.FIELD_DECLARATION_ORDER)) {
+			//TODO improve the logic behind this?
+			List<String> fieldOrder = FieldOrder.forClass(this);
+			if (fieldOrder == null) {
+				return fields;
+			}
 
-  public boolean isOwn() {
-    return own;
-  }
+			VBStyleCollection<StructField, String> sorted = new VBStyleCollection<StructField, String>();
 
-  public LazyLoader getLoader() {
-    return loader;
-  }
+			List<StructField> unSorted = new ArrayList<StructField>();
 
-  public boolean isVersionGE_1_5() {
-    return (majorVersion > 48 || (majorVersion == 48 && minorVersion > 0)); // FIXME: check second condition
-  }
+			/**
+			 * First we add the original fields to the new collection as long
+			 * as they are not in the fieldOrder list, otherwise we add them to the to-be sorted list.
+			 */
+			for (StructField s : fields) {
+				String key = InterpreterUtil.makeUniqueKey(s.getName(), s.getDescriptor());
 
-  public boolean isVersionGE_1_7() {
-    return (majorVersion >= 51);
-  }
+				if (!sorted.containsKey(key) && !fieldOrder.contains(s.getName())) {
+					sorted.addWithKey(s, key);
+				} else {
+					unSorted.add(s);
+				}
+			}
 
-  public int getBytecodeVersion() {
-    switch (majorVersion) {
-      case 52:
-        return CodeConstants.BYTECODE_JAVA_8;
-      case 51:
-        return CodeConstants.BYTECODE_JAVA_7;
-      case 50:
-        return CodeConstants.BYTECODE_JAVA_6;
-      case 49:
-        return CodeConstants.BYTECODE_JAVA_5;
-    }
+			/**
+			 * Then we loop through and sort the remaining fields in the order they appear
+			 * in the fieldOrder list.
+			 */
+			for (String name : fieldOrder) {
+				for (StructField s : unSorted) {
+					String key = InterpreterUtil.makeUniqueKey(s.getName(), s.getDescriptor());
 
-    return CodeConstants.BYTECODE_JAVA_LE_4;
-  }
+					if (!sorted.containsKey(key) && name.equals(s.getName())) {
+						sorted.addWithKey(s, key);
+						break;
+					}
+				}
+			}
+
+			return sorted;
+		}
+		return fields;
+	}
+
+	public boolean isOwn() {
+		return own;
+	}
+
+	public LazyLoader getLoader() {
+		return loader;
+	}
+
+	public boolean isVersionGE_1_5() {
+		return (majorVersion > 48 || (majorVersion == 48 && minorVersion > 0)); // FIXME: check second condition
+	}
+
+	public boolean isVersionGE_1_7() {
+		return (majorVersion >= 51);
+	}
+
+	public int getBytecodeVersion() {
+		switch (majorVersion) {
+			case 52:
+				return CodeConstants.BYTECODE_JAVA_8;
+			case 51:
+				return CodeConstants.BYTECODE_JAVA_7;
+			case 50:
+				return CodeConstants.BYTECODE_JAVA_6;
+			case 49:
+				return CodeConstants.BYTECODE_JAVA_5;
+		}
+
+		return CodeConstants.BYTECODE_JAVA_LE_4;
+	}
 }

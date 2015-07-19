@@ -30,90 +30,87 @@ import org.jetbrains.java.decompiler.util.InterpreterUtil;
 
 public class EnumProcessor {
 
-  public static void clearEnum(ClassWrapper wrapper) {
-    StructClass cl = wrapper.getClassStruct();
+	public static void clearEnum(ClassWrapper wrapper) {
+		StructClass cl = wrapper.getClassStruct();
 
-    // hide values/valueOf methods and super() invocations
-    for (MethodWrapper method : wrapper.getMethods()) {
-      StructMethod mt = method.methodStruct;
-      String name = mt.getName();
-      String descriptor = mt.getDescriptor();
+		// hide values/valueOf methods and super() invocations
+		for (MethodWrapper method : wrapper.getMethods()) {
+			StructMethod mt = method.methodStruct;
+			String name = mt.getName();
+			String descriptor = mt.getDescriptor();
 
-      if ("values".equals(name)) {
-        if (descriptor.equals("()[L" + cl.qualifiedName + ";")) {
-          wrapper.getHiddenMembers().add(InterpreterUtil.makeUniqueKey(name, descriptor));
-        }
-      }
-      else if ("valueOf".equals(name)) {
-        if (descriptor.equals("(Ljava/lang/String;)L" + cl.qualifiedName + ";")) {
-          wrapper.getHiddenMembers().add(InterpreterUtil.makeUniqueKey(name, descriptor));
-        }
-      }
-      else if (CodeConstants.INIT_NAME.equals(name)) {
-        Statement firstData = findFirstData(method.root);
-        if (firstData != null && !firstData.getExprents().isEmpty()) {
-          Exprent exprent = firstData.getExprents().get(0);
-          if (exprent.type == Exprent.EXPRENT_INVOCATION) {
-            InvocationExprent invexpr = (InvocationExprent)exprent;
-            if (isInvocationSuperConstructor(invexpr, method, wrapper)) {
-              firstData.getExprents().remove(0);
-            }
-          }
-        }
-      }
-    }
+			if ("values".equals(name)) {
+				if (descriptor.equals("()[L" + cl.qualifiedName + ";")) {
+					wrapper.getHiddenMembers().add(InterpreterUtil.makeUniqueKey(name, descriptor));
+				}
+			} else if ("valueOf".equals(name)) {
+				if (descriptor.equals("(Ljava/lang/String;)L" + cl.qualifiedName + ";")) {
+					wrapper.getHiddenMembers().add(InterpreterUtil.makeUniqueKey(name, descriptor));
+				}
+			} else if (CodeConstants.INIT_NAME.equals(name)) {
+				Statement firstData = findFirstData(method.root);
+				if (firstData != null && !firstData.getExprents().isEmpty()) {
+					Exprent exprent = firstData.getExprents().get(0);
+					if (exprent.type == Exprent.EXPRENT_INVOCATION) {
+						InvocationExprent invexpr = (InvocationExprent) exprent;
+						if (isInvocationSuperConstructor(invexpr, method, wrapper)) {
+							firstData.getExprents().remove(0);
+						}
+					}
+				}
+			}
+		}
 
-    // hide synthetic fields of enum and it's constants
-    for (StructField fd : cl.getFields()) {
-      String descriptor = fd.getDescriptor();
-      if (fd.isSynthetic() && descriptor.equals("[L" + cl.qualifiedName + ";")) {
-        wrapper.getHiddenMembers().add(InterpreterUtil.makeUniqueKey(fd.getName(), descriptor));
-      }
-    }
-  }
+		// hide synthetic fields of enum and it's constants
+		for (StructField fd : cl.getFields()) {
+			String descriptor = fd.getDescriptor();
+			if (fd.isSynthetic() && descriptor.equals("[L" + cl.qualifiedName + ";")) {
+				wrapper.getHiddenMembers().add(InterpreterUtil.makeUniqueKey(fd.getName(), descriptor));
+			}
+		}
+	}
 
-  // FIXME: move to a util class (see also InitializerProcessor)
-  private static Statement findFirstData(Statement stat) {
+	// FIXME: move to a util class (see also InitializerProcessor)
+	private static Statement findFirstData(Statement stat) {
 
-    if (stat.getExprents() != null) {
-      return stat;
-    }
-    else {
-      if (stat.isLabeled()) {
-        return null;
-      }
+		if (stat.getExprents() != null) {
+			return stat;
+		} else {
+			if (stat.isLabeled()) {
+				return null;
+			}
 
-      switch (stat.type) {
-        case Statement.TYPE_SEQUENCE:
-        case Statement.TYPE_IF:
-        case Statement.TYPE_ROOT:
-        case Statement.TYPE_SWITCH:
-        case Statement.TYPE_SYNCRONIZED:
-          return findFirstData(stat.getFirst());
-        default:
-          return null;
-      }
-    }
-  }
+			switch (stat.type) {
+				case Statement.TYPE_SEQUENCE:
+				case Statement.TYPE_IF:
+				case Statement.TYPE_ROOT:
+				case Statement.TYPE_SWITCH:
+				case Statement.TYPE_SYNCRONIZED:
+					return findFirstData(stat.getFirst());
+				default:
+					return null;
+			}
+		}
+	}
 
-  // FIXME: move to util class (see also InitializerProcessor)
-  private static boolean isInvocationSuperConstructor(InvocationExprent inv, MethodWrapper meth, ClassWrapper wrapper) {
+	// FIXME: move to util class (see also InitializerProcessor)
+	private static boolean isInvocationSuperConstructor(InvocationExprent inv, MethodWrapper meth, ClassWrapper wrapper) {
 
-    if (inv.getFunctype() == InvocationExprent.TYP_INIT) {
-      if (inv.getInstance().type == Exprent.EXPRENT_VAR) {
-        VarExprent instvar = (VarExprent)inv.getInstance();
-        VarVersionPair varpaar = new VarVersionPair(instvar);
+		if (inv.getFunctype() == InvocationExprent.TYP_INIT) {
+			if (inv.getInstance().type == Exprent.EXPRENT_VAR) {
+				VarExprent instvar = (VarExprent) inv.getInstance();
+				VarVersionPair varpaar = new VarVersionPair(instvar);
 
-        String classname = meth.varproc.getThisVars().get(varpaar);
+				String classname = meth.varproc.getThisVars().get(varpaar);
 
-        if (classname != null) { // any this instance. TODO: Restrict to current class?
-          if (!wrapper.getClassStruct().qualifiedName.equals(inv.getClassname())) {
-            return true;
-          }
-        }
-      }
-    }
+				if (classname != null) { // any this instance. TODO: Restrict to current class?
+					if (!wrapper.getClassStruct().qualifiedName.equals(inv.getClassname())) {
+						return true;
+					}
+				}
+			}
+		}
 
-    return false;
-  }
+		return false;
+	}
 }

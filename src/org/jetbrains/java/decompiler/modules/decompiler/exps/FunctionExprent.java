@@ -159,10 +159,9 @@ public class FunctionExprent extends Exprent {
 	};
 
 	private static final Set<Integer> ASSOCIATIVITY = new HashSet<Integer>(Arrays.asList(FUNCTION_ADD, FUNCTION_MUL, FUNCTION_AND, FUNCTION_OR, FUNCTION_XOR, FUNCTION_CADD, FUNCTION_COR, FUNCTION_STR_CONCAT));
-
+	private final List<Exprent> lstOperands;
 	private int funcType;
 	private VarType implicitType;
-	private final List<Exprent> lstOperands;
 
 	public FunctionExprent(int funcType, ListStack<Exprent> stack, Set<Integer> bytecodeOffsets) {
 		this(funcType, new ArrayList<Exprent>(), bytecodeOffsets);
@@ -192,6 +191,24 @@ public class FunctionExprent extends Exprent {
 	public FunctionExprent(int funcType, Exprent operand, Set<Integer> bytecodeOffsets) {
 		this(funcType, new ArrayList<Exprent>(1), bytecodeOffsets);
 		lstOperands.add(operand);
+	}
+
+	public static int getPrecedence(int func) {
+		return PRECEDENCE[func];
+	}
+
+	private static VarType getMaxVarType(VarType[] arr) {
+		int[] types = new int[]{CodeConstants.TYPE_DOUBLE, CodeConstants.TYPE_FLOAT, CodeConstants.TYPE_LONG};
+		VarType[] vartypes = new VarType[]{VarType.VARTYPE_DOUBLE, VarType.VARTYPE_FLOAT, VarType.VARTYPE_LONG};
+
+		for (int i = 0; i < types.length; i++) {
+			for (int j = 0; j < arr.length; j++) {
+				if (arr[j].type == types[i]) {
+					return vartypes[i];
+				}
+			}
+		}
+		return VarType.VARTYPE_INT;
 	}
 
 	@Override
@@ -421,8 +438,7 @@ public class FunctionExprent extends Exprent {
 				lstOperands.set(1, expr1);
 				setFuncType(IfExprent.reverseComp(getFuncType()));
 			}
-			TextBuffer b = wrapOperandString(lstOperands.get(0), false, indent, tracer).append(OPERATORS[funcType - FUNCTION_EQ + 11]).append(wrapOperandString(lstOperands.get(1), true, indent, tracer));
-			return b;
+			return wrapOperandString(lstOperands.get(0), false, indent, tracer).append(OPERATORS[funcType - FUNCTION_EQ + 11]).append(wrapOperandString(lstOperands.get(1), true, indent, tracer));
 		}
 
 		switch (funcType) {
@@ -480,10 +496,6 @@ public class FunctionExprent extends Exprent {
 		return getPrecedence(funcType);
 	}
 
-	public static int getPrecedence(int func) {
-		return PRECEDENCE[func];
-	}
-
 	public VarType getSimpleCastType() {
 		return TYPES[funcType - FUNCTION_I2L];
 	}
@@ -508,20 +520,6 @@ public class FunctionExprent extends Exprent {
 		}
 
 		return res;
-	}
-
-	private static VarType getMaxVarType(VarType[] arr) {
-		int[] types = new int[]{CodeConstants.TYPE_DOUBLE, CodeConstants.TYPE_FLOAT, CodeConstants.TYPE_LONG};
-		VarType[] vartypes = new VarType[]{VarType.VARTYPE_DOUBLE, VarType.VARTYPE_FLOAT, VarType.VARTYPE_LONG};
-
-		for (int i = 0; i < types.length; i++) {
-			for (int j = 0; j < arr.length; j++) {
-				if (arr[j].type == types[i]) {
-					return vartypes[i];
-				}
-			}
-		}
-		return VarType.VARTYPE_INT;
 	}
 
 	// *****************************************************************************

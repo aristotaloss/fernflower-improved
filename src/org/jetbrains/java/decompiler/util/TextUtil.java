@@ -21,11 +21,11 @@ import org.jetbrains.java.decompiler.main.TextBuffer;
 import org.jetbrains.java.decompiler.modules.decompiler.ExprProcessor;
 
 public class TextUtil {
-  public static void writeQualifiedSuper(TextBuffer buf, String qualifier) {
-    ClassesProcessor.ClassNode classNode = (ClassesProcessor.ClassNode)DecompilerContext.getProperty(DecompilerContext.CURRENT_CLASS_NODE);
-    if (!qualifier.equals(classNode.classStruct.qualifiedName)) {
-      buf.append(DecompilerContext.getImportCollector().getShortName(ExprProcessor.buildJavaClassName(qualifier))).append('.');
-    }
-    buf.append("super");
-  }
+	public static void writeQualifiedSuper(TextBuffer buf, String qualifier) {
+		ClassesProcessor.ClassNode classNode = (ClassesProcessor.ClassNode) DecompilerContext.getProperty(DecompilerContext.CURRENT_CLASS_NODE);
+		if (!qualifier.equals(classNode.classStruct.qualifiedName)) {
+			buf.append(DecompilerContext.getImportCollector().getShortName(ExprProcessor.buildJavaClassName(qualifier))).append('.');
+		}
+		buf.append("super");
+	}
 }

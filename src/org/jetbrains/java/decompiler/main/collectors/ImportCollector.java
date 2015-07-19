@@ -27,131 +27,125 @@ import java.util.Map.Entry;
 
 public class ImportCollector {
 
-  private static final String JAVA_LANG_PACKAGE = "java.lang";
+	private static final String JAVA_LANG_PACKAGE = "java.lang";
 
-  private final Map<String, String> mapSimpleNames = new HashMap<String, String>();
-  private final Set<String> setNotImportedNames = new HashSet<String>();
-  private String currentPackageSlash = "";
-  private String currentPackagePoint = "";
+	private final Map<String, String> mapSimpleNames = new HashMap<String, String>();
+	private final Set<String> setNotImportedNames = new HashSet<String>();
+	private String currentPackageSlash = "";
+	private String currentPackagePoint = "";
 
-  public ImportCollector(ClassNode root) {
+	public ImportCollector(ClassNode root) {
 
-    String clname = root.classStruct.qualifiedName;
-    int index = clname.lastIndexOf("/");
-    if (index >= 0) {
-      currentPackageSlash = clname.substring(0, index);
-      currentPackagePoint = currentPackageSlash.replace('/', '.');
-      currentPackageSlash += "/";
-    }
-  }
+		String clname = root.classStruct.qualifiedName;
+		int index = clname.lastIndexOf("/");
+		if (index >= 0) {
+			currentPackageSlash = clname.substring(0, index);
+			currentPackagePoint = currentPackageSlash.replace('/', '.');
+			currentPackageSlash += "/";
+		}
+	}
 
-  public String getShortName(String fullname) {
-    return getShortName(fullname, true);
-  }
+	public String getShortName(String fullname) {
+		return getShortName(fullname, true);
+	}
 
-  public String getShortName(String fullname, boolean imported) {
+	public String getShortName(String fullname, boolean imported) {
 
-    ClassesProcessor clproc = DecompilerContext.getClassProcessor();
-    ClassNode node = clproc.getMapRootClasses().get(fullname.replace('.', '/'));
+		ClassesProcessor clproc = DecompilerContext.getClassProcessor();
+		ClassNode node = clproc.getMapRootClasses().get(fullname.replace('.', '/'));
 
-    String retname = null;
+		String retname = null;
 
-    if (node != null && node.classStruct.isOwn()) {
+		if (node != null && node.classStruct.isOwn()) {
 
-      retname = node.simpleName;
+			retname = node.simpleName;
 
-      while (node.parent != null && node.type == ClassNode.CLASS_MEMBER) {
-        retname = node.parent.simpleName + "." + retname;
-        node = node.parent;
-      }
+			while (node.parent != null && node.type == ClassNode.CLASS_MEMBER) {
+				retname = node.parent.simpleName + "." + retname;
+				node = node.parent;
+			}
 
-      if (node.type == ClassNode.CLASS_ROOT) {
-        fullname = node.classStruct.qualifiedName;
-        fullname = fullname.replace('/', '.');
-      }
-      else {
-        return retname;
-      }
-    }
-    else {
-      fullname = fullname.replace('$', '.');
-    }
+			if (node.type == ClassNode.CLASS_ROOT) {
+				fullname = node.classStruct.qualifiedName;
+				fullname = fullname.replace('/', '.');
+			} else {
+				return retname;
+			}
+		} else {
+			fullname = fullname.replace('$', '.');
+		}
 
-    String nshort = fullname;
-    String npackage = "";
+		String nshort = fullname;
+		String npackage = "";
 
-    int lastpoint = fullname.lastIndexOf(".");
+		int lastpoint = fullname.lastIndexOf(".");
 
-    if (lastpoint >= 0) {
-      nshort = fullname.substring(lastpoint + 1);
-      npackage = fullname.substring(0, lastpoint);
-    }
+		if (lastpoint >= 0) {
+			nshort = fullname.substring(lastpoint + 1);
+			npackage = fullname.substring(0, lastpoint);
+		}
 
-    StructContext context = DecompilerContext.getStructContext();
+		StructContext context = DecompilerContext.getStructContext();
 
-    // check for another class which could 'shadow' this one. Two cases:
-    // 1) class with the same short name in the current package
-    // 2) class with the same short name in the default package
-    boolean existsDefaultClass = (context.getClass(currentPackageSlash + nshort) != null
-                                  && !npackage.equals(currentPackagePoint)) // current package
-                                 || (context.getClass(nshort) != null 
-                                  && !currentPackagePoint.isEmpty());  // default package
+		// check for another class which could 'shadow' this one. Two cases:
+		// 1) class with the same short name in the current package
+		// 2) class with the same short name in the default package
+		boolean existsDefaultClass = (context.getClass(currentPackageSlash + nshort) != null && !npackage.equals(currentPackagePoint)) // current package
+				|| (context.getClass(nshort) != null && !currentPackagePoint.isEmpty());  // default package
 
-    if (existsDefaultClass ||
-        (mapSimpleNames.containsKey(nshort) && !npackage.equals(mapSimpleNames.get(nshort)))) {
-      return fullname;
-    }
-    else if (!mapSimpleNames.containsKey(nshort)) {
-      mapSimpleNames.put(nshort, npackage);
+		if (existsDefaultClass || (mapSimpleNames.containsKey(nshort) && !npackage.equals(mapSimpleNames.get(nshort)))) {
+			return fullname;
+		} else if (!mapSimpleNames.containsKey(nshort)) {
+			mapSimpleNames.put(nshort, npackage);
 
-      if (!imported) {
-        setNotImportedNames.add(nshort);
-      }
-    }
+			if (!imported) {
+				setNotImportedNames.add(nshort);
+			}
+		}
 
-    return retname == null ? nshort : retname;
-  }
+		return retname == null ? nshort : retname;
+	}
 
-  public int writeImports(TextBuffer buffer) {
-    int importlines_written = 0;
+	public int writeImports(TextBuffer buffer) {
+		int importlines_written = 0;
 
-    List<String> imports = packImports();
+		List<String> imports = packImports();
 
-    for (String s : imports) {
-      buffer.append("import ");
-      buffer.append(s);
-      buffer.append(";");
-      buffer.appendLineSeparator();
+		for (String s : imports) {
+			buffer.append("import ");
+			buffer.append(s);
+			buffer.append(";");
+			buffer.appendLineSeparator();
 
-      importlines_written++;
-    }
+			importlines_written++;
+		}
 
-    return importlines_written;
-  }
+		return importlines_written;
+	}
 
-  private List<String> packImports() {
-    List<Entry<String, String>> lst = new ArrayList<Entry<String, String>>(mapSimpleNames.entrySet());
+	private List<String> packImports() {
+		List<Entry<String, String>> lst = new ArrayList<Entry<String, String>>(mapSimpleNames.entrySet());
 
-    Collections.sort(lst, new Comparator<Entry<String, String>>() {
-      public int compare(Entry<String, String> par0, Entry<String, String> par1) {
-        int res = par0.getValue().compareTo(par1.getValue());
-        if (res == 0) {
-          res = par0.getKey().compareTo(par1.getKey());
-        }
-        return res;
-      }
-    });
+		Collections.sort(lst, new Comparator<Entry<String, String>>() {
+			public int compare(Entry<String, String> par0, Entry<String, String> par1) {
+				int res = par0.getValue().compareTo(par1.getValue());
+				if (res == 0) {
+					res = par0.getKey().compareTo(par1.getKey());
+				}
+				return res;
+			}
+		});
 
-    List<String> res = new ArrayList<String>();
-    for (Entry<String, String> ent : lst) {
-      // exclude a current class or one of the nested ones, java.lang and empty packages
-      if (!setNotImportedNames.contains(ent.getKey()) &&
-          !JAVA_LANG_PACKAGE.equals(ent.getValue()) &&
-          !ent.getValue().isEmpty()) {
-        res.add(ent.getValue() + "." + ent.getKey());
-      }
-    }
+		List<String> res = new ArrayList<String>();
+		for (Entry<String, String> ent : lst) {
+			// exclude a current class or one of the nested ones, java.lang and empty packages
+			if (!setNotImportedNames.contains(ent.getKey()) &&
+					!JAVA_LANG_PACKAGE.equals(ent.getValue()) &&
+					!ent.getValue().isEmpty()) {
+				res.add(ent.getValue() + "." + ent.getKey());
+			}
+		}
 
-    return res;
-  }
+		return res;
+	}
 }

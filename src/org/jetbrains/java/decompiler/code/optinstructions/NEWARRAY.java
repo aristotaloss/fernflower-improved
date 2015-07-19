@@ -22,12 +22,12 @@ import java.io.IOException;
 
 public class NEWARRAY extends Instruction {
 
-  public void writeToStream(DataOutputStream out, int offset) throws IOException {
-    out.writeByte(opc_newarray);
-    out.writeByte(getOperand(0));
-  }
+	public void writeToStream(DataOutputStream out, int offset) throws IOException {
+		out.writeByte(opc_newarray);
+		out.writeByte(getOperand(0));
+	}
 
-  public int length() {
-    return 2;
-  }
+	public int length() {
+		return 2;
+	}
 }

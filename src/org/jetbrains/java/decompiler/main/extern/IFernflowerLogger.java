@@ -17,43 +17,54 @@ package org.jetbrains.java.decompiler.main.extern;
 
 public abstract class IFernflowerLogger {
 
-  public enum Severity {
-    TRACE("TRACE: "), INFO("INFO:  "), WARN("WARN:  "), ERROR("ERROR: ");
+	private Severity severity = Severity.INFO;
 
-    public final String prefix;
+	public boolean accepts(Severity severity) {
+		return severity.ordinal() >= this.severity.ordinal();
+	}
 
-    Severity(String prefix) {
-      this.prefix = prefix;
-    }
-  }
+	public void setSeverity(Severity severity) {
+		this.severity = severity;
+	}
 
-  private Severity severity = Severity.INFO;
+	public abstract void writeMessage(String message, Severity severity);
 
-  public boolean accepts(Severity severity) {
-    return severity.ordinal() >= this.severity.ordinal();
-  }
+	public abstract void writeMessage(String message, Throwable t);
 
-  public void setSeverity(Severity severity) {
-    this.severity = severity;
-  }
+	public void startReadingClass(String className) {
+	}
 
-  public abstract void writeMessage(String message, Severity severity);
+	public void endReadingClass() {
+	}
 
-  public abstract void writeMessage(String message, Throwable t);
+	public void startClass(String className) {
+	}
 
-  public void startReadingClass(String className) { }
+	public void endClass() {
+	}
 
-  public void endReadingClass() { }
+	public void startMethod(String methodName) {
+	}
 
-  public void startClass(String className) { }
+	public void endMethod() {
+	}
 
-  public void endClass() { }
+	public void startWriteClass(String className) {
+	}
 
-  public void startMethod(String methodName) { }
+	public void endWriteClass() {
+	}
 
-  public void endMethod() { }
+	public enum Severity {
+		TRACE("TRACE: "),
+		INFO("INFO:  "),
+		WARN("WARN:  "),
+		ERROR("ERROR: ");
 
-  public void startWriteClass(String className) { }
+		public final String prefix;
 
-  public void endWriteClass() { }
+		Severity(String prefix) {
+			this.prefix = prefix;
+		}
+	}
 }

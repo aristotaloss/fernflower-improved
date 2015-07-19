@@ -24,106 +24,105 @@ import java.util.Set;
 
 public class ExceptionRangeCFG {
 
-  private List<BasicBlock> protectedRange = new ArrayList<BasicBlock>(); // FIXME: replace with set
+	private List<BasicBlock> protectedRange = new ArrayList<BasicBlock>(); // FIXME: replace with set
 
-  private BasicBlock handler;
+	private BasicBlock handler;
 
-  private List<String> exceptionTypes;
+	private List<String> exceptionTypes;
 
-  public ExceptionRangeCFG(List<BasicBlock> protectedRange, BasicBlock handler, List<String> exceptionType) {
-    this.protectedRange = protectedRange;
-    this.handler = handler;
+	public ExceptionRangeCFG(List<BasicBlock> protectedRange, BasicBlock handler, List<String> exceptionType) {
+		this.protectedRange = protectedRange;
+		this.handler = handler;
 
-    if (exceptionType != null) {
-      this.exceptionTypes = new ArrayList<String>(exceptionType);
-    }
-  }
+		if (exceptionType != null) {
+			this.exceptionTypes = new ArrayList<String>(exceptionType);
+		}
+	}
 
-  public boolean isCircular() {
-    return protectedRange.contains(handler);
-  }
+	public boolean isCircular() {
+		return protectedRange.contains(handler);
+	}
 
-  public String toString() {
+	public String toString() {
 
-    String new_line_separator = DecompilerContext.getNewLineSeparator();
+		String new_line_separator = DecompilerContext.getNewLineSeparator();
 
-    StringBuilder buf = new StringBuilder();
+		StringBuilder buf = new StringBuilder();
 
-    buf.append("exceptionType:");
-    for (String exception_type : exceptionTypes) {
-      buf.append(" ").append(exception_type);
-    }
-    buf.append(new_line_separator);
+		buf.append("exceptionType:");
+		for (String exception_type : exceptionTypes) {
+			buf.append(" ").append(exception_type);
+		}
+		buf.append(new_line_separator);
 
-    buf.append("handler: ").append(handler.id).append(new_line_separator);
-    buf.append("range: ");
-    for (int i = 0; i < protectedRange.size(); i++) {
-      buf.append(protectedRange.get(i).id).append(" ");
-    }
-    buf.append(new_line_separator);
+		buf.append("handler: ").append(handler.id).append(new_line_separator);
+		buf.append("range: ");
+		for (int i = 0; i < protectedRange.size(); i++) {
+			buf.append(protectedRange.get(i).id).append(" ");
+		}
+		buf.append(new_line_separator);
 
-    return buf.toString();
-  }
+		return buf.toString();
+	}
 
-  public BasicBlock getHandler() {
-    return handler;
-  }
+	public BasicBlock getHandler() {
+		return handler;
+	}
 
-  public void setHandler(BasicBlock handler) {
-    this.handler = handler;
-  }
+	public void setHandler(BasicBlock handler) {
+		this.handler = handler;
+	}
 
-  public List<BasicBlock> getProtectedRange() {
-    return protectedRange;
-  }
+	public List<BasicBlock> getProtectedRange() {
+		return protectedRange;
+	}
 
-  public void setProtectedRange(List<BasicBlock> protectedRange) {
-    this.protectedRange = protectedRange;
-  }
+	public void setProtectedRange(List<BasicBlock> protectedRange) {
+		this.protectedRange = protectedRange;
+	}
 
-  public List<String> getExceptionTypes() {
-    return this.exceptionTypes;
-  }
+	public List<String> getExceptionTypes() {
+		return this.exceptionTypes;
+	}
 
-  public void addExceptionType(String exceptionType) {
+	public void addExceptionType(String exceptionType) {
 
-    if (this.exceptionTypes == null) {
-      return;
-    }
+		if (this.exceptionTypes == null) {
+			return;
+		}
 
-    if (exceptionType == null) {
-      this.exceptionTypes = null;
-    }
-    else {
-      this.exceptionTypes.add(exceptionType);
-    }
-  }
+		if (exceptionType == null) {
+			this.exceptionTypes = null;
+		} else {
+			this.exceptionTypes.add(exceptionType);
+		}
+	}
 
-  public String getUniqueExceptionsString() {
+	public String getUniqueExceptionsString() {
 
-    if (exceptionTypes == null) {
-      return null;
-    }
+		if (exceptionTypes == null) {
+			return null;
+		}
 
-    Set<String> setExceptionStrings = new HashSet<String>();
+		Set<String> setExceptionStrings = new HashSet<String>();
 
-    for (String exceptionType : exceptionTypes) { // normalize order
-      setExceptionStrings.add(exceptionType);
-    }
+		for (String exceptionType : exceptionTypes) { // normalize order
+			setExceptionStrings.add(exceptionType);
+		}
 
-    String ret = "";
-    for (String exception : setExceptionStrings) {
-      if (!ret.isEmpty()) {
-        ret += ":";
-      }
-      ret += exception;
-    }
+		String ret = "";
+		for (String exception : setExceptionStrings) {
+			if (!ret.isEmpty()) {
+				ret += ":";
+			}
+			ret += exception;
+		}
 
-    return ret;
-  }
+		return ret;
+	}
 
 
-  //	public void setExceptionType(String exceptionType) {
-  //		this.exceptionType = exceptionType;
-  //	}
+	//	public void setExceptionType(String exceptionType) {
+	//		this.exceptionType = exceptionType;
+	//	}
 }

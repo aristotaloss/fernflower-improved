@@ -1,57 +1,53 @@
-package pkg;
-
-import java.lang.Override;
-import java.lang.Runnable;
-
 public class TestClassSimpleBytecodeMapping {
 
-  public TestClassSimpleBytecodeMapping() {}
-  
-  public int test() {
-    
-    System.out.println("before");
+	public TestClassSimpleBytecodeMapping() {
+	}
 
-    run(new Runnable() {
-      @Override
-      public void run() {
-        System.out.println("Runnable");
-      }
-    });
+	public int test() {
 
-    test2("1");
+		System.out.println("before");
 
-    if(Math.random() > 0) {
-      System.out.println("0");
-      return 0;
-    } else {
-      System.out.println("1");
-      return 1;
-    }
-  }
+		run(new Runnable() {
+			@Override
+			public void run() {
+				System.out.println("Runnable");
+			}
+		});
 
-  public void test2(String a) {
-    try {
-      Integer.parseInt(a);
-    } catch (Exception e) {
-      System.out.println(e);
-    } finally {
-      System.out.println("Finally");
-    }
-  }
+		test2("1");
 
-  public class InnerClass {
-    public void print() {
-      System.out.println("Inner");
-    }
-  }
+		if (Math.random() > 0) {
+			System.out.println("0");
+			return 0;
+		} else {
+			System.out.println("1");
+			return 1;
+		}
+	}
 
-  void run(Runnable r) {
-    r.run();
-  }
+	public void test2(String a) {
+		try {
+			Integer.parseInt(a);
+		} catch (Exception e) {
+			System.out.println(e);
+		} finally {
+			System.out.println("Finally");
+		}
+	}
 
-  public class InnerClass2 {
-    public void print() {
-      System.out.println("Inner2");
-    }
-  }
+	void run(Runnable r) {
+		r.run();
+	}
+
+	public class InnerClass {
+		public void print() {
+			System.out.println("Inner");
+		}
+	}
+
+	public class InnerClass2 {
+		public void print() {
+			System.out.println("Inner2");
+		}
+	}
 }

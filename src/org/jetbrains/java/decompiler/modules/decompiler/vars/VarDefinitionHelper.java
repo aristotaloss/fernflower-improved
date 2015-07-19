@@ -117,6 +117,43 @@ public class VarDefinitionHelper {
 		initStatement(root);
 	}
 
+	private static List<VarExprent> getAllVars(List<Exprent> lst) {
+
+		List<VarExprent> res = new ArrayList<VarExprent>();
+		List<Exprent> listTemp = new ArrayList<Exprent>();
+
+		for (Exprent expr : lst) {
+			listTemp.addAll(expr.getAllExprents(true));
+			listTemp.add(expr);
+		}
+
+		for (Exprent exprent : listTemp) {
+			if (exprent.type == Exprent.EXPRENT_VAR) {
+				res.add((VarExprent) exprent);
+			}
+		}
+
+		return res;
+	}
+
+
+	// *****************************************************************************
+	// private methods
+	// *****************************************************************************
+
+	private static boolean setDefinition(Exprent expr, Integer index) {
+		if (expr.type == Exprent.EXPRENT_ASSIGNMENT) {
+			Exprent left = ((AssignmentExprent) expr).getLeft();
+			if (left.type == Exprent.EXPRENT_VAR) {
+				VarExprent var = (VarExprent) left;
+				if (var.getIndex() == index.intValue()) {
+					var.setDefinition(true);
+					return true;
+				}
+			}
+		}
+		return false;
+	}
 
 	public void setVarDefinitions() {
 
@@ -200,11 +237,6 @@ public class VarDefinitionHelper {
 			}
 		}
 	}
-
-
-	// *****************************************************************************
-	// private methods
-	// *****************************************************************************
 
 	private Statement findFirstBlock(Statement stat, Integer varindex) {
 
@@ -310,38 +342,5 @@ public class VarDefinitionHelper {
 		mapStatementVars.put(stat.id, set);
 
 		return set;
-	}
-
-	private static List<VarExprent> getAllVars(List<Exprent> lst) {
-
-		List<VarExprent> res = new ArrayList<VarExprent>();
-		List<Exprent> listTemp = new ArrayList<Exprent>();
-
-		for (Exprent expr : lst) {
-			listTemp.addAll(expr.getAllExprents(true));
-			listTemp.add(expr);
-		}
-
-		for (Exprent exprent : listTemp) {
-			if (exprent.type == Exprent.EXPRENT_VAR) {
-				res.add((VarExprent) exprent);
-			}
-		}
-
-		return res;
-	}
-
-	private static boolean setDefinition(Exprent expr, Integer index) {
-		if (expr.type == Exprent.EXPRENT_ASSIGNMENT) {
-			Exprent left = ((AssignmentExprent) expr).getLeft();
-			if (left.type == Exprent.EXPRENT_VAR) {
-				VarExprent var = (VarExprent) left;
-				if (var.getIndex() == index.intValue()) {
-					var.setDefinition(true);
-					return true;
-				}
-			}
-		}
-		return false;
 	}
 }

@@ -21,14 +21,14 @@ import java.io.IOException;
 
 public class StructConstantValueAttribute extends StructGeneralAttribute {
 
-  private int index;
+	private int index;
 
-  @Override
-  public void initContent(ConstantPool pool) throws IOException {
-    index = stream().readUnsignedShort();
-  }
+	@Override
+	public void initContent(ConstantPool pool) throws IOException {
+		index = stream().readUnsignedShort();
+	}
 
-  public int getIndex() {
-    return index;
-  }
+	public int getIndex() {
+		return index;
+	}
 }

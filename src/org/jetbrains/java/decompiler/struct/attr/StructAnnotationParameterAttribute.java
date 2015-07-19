@@ -26,26 +26,25 @@ import java.util.List;
 
 public class StructAnnotationParameterAttribute extends StructGeneralAttribute {
 
-  private List<List<AnnotationExprent>> paramAnnotations;
+	private List<List<AnnotationExprent>> paramAnnotations;
 
-  @Override
-  public void initContent(ConstantPool pool) throws IOException {
-    DataInputStream data = stream();
+	@Override
+	public void initContent(ConstantPool pool) throws IOException {
+		DataInputStream data = stream();
 
-    int len = data.readUnsignedByte();
-    if (len > 0) {
-      paramAnnotations = new ArrayList<List<AnnotationExprent>>(len);
-      for (int i = 0; i < len; i++) {
-        List<AnnotationExprent> annotations = StructAnnotationAttribute.parseAnnotations(pool, data);
-        paramAnnotations.add(annotations);
-      }
-    }
-    else {
-      paramAnnotations = Collections.emptyList();
-    }
-  }
+		int len = data.readUnsignedByte();
+		if (len > 0) {
+			paramAnnotations = new ArrayList<List<AnnotationExprent>>(len);
+			for (int i = 0; i < len; i++) {
+				List<AnnotationExprent> annotations = StructAnnotationAttribute.parseAnnotations(pool, data);
+				paramAnnotations.add(annotations);
+			}
+		} else {
+			paramAnnotations = Collections.emptyList();
+		}
+	}
 
-  public List<List<AnnotationExprent>> getParamAnnotations() {
-    return paramAnnotations;
-  }
+	public List<List<AnnotationExprent>> getParamAnnotations() {
+		return paramAnnotations;
+	}
 }

@@ -13,7 +13,7 @@ Changes include:
  - In for-loops, I made `for (int i = 0; i < 2; ++i)` become `for (int i = 0; i < 2; i++)` as I prefer that style.
  - Current FernFlower (well, at the time of writing) has a bug where some literals were output as '&eacute;&euro;' because the literal was printed as a char, which gave really messy code. I changed this bit to print the literal integer value.
  - In if-statements, FernFlower will format `if (7 == obj)` to `if (obj == 7)` (completely personal preference).
-
+ - Added the option to order fields by their initialization order using the `fdo` argument.
 
 # License
 
@@ -45,6 +45,7 @@ With the exception of mpm and urc the value of 1 means the option is activated, 
 
 Typically, the following options will be changed by user, if any: hes, hdc, dgs, mpm, ren, urc The rest of options can be left as they are: they are aimed at professional reverse engineers.
 
+ - fdo (1): order fields by their initialization order
  - rbr (1): hide bridge methods
  - rsy (0): hide synthetic class members
  - din (1): decompile inner classes

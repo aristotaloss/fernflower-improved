@@ -13,28 +13,43 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package pkg;
 
 public class TestMethodParameters {
-  TestMethodParameters(@Deprecated int p01) { }
-  void m1(@Deprecated int p02) { }
-  static void m2(@Deprecated int p03) { }
+	TestMethodParameters(@Deprecated int p01) {
+	}
 
-  class C1 {
-    C1(@Deprecated int p11) { }
-    void m(@Deprecated int p12) { }
-  }
+	static void m2(@Deprecated int p03) {
+	}
 
-  static class C2 {
-    C2(@Deprecated int p21) { }
-    void m1(@Deprecated int p22) { }
-    static void m2(@Deprecated int p23) { }
-  }
+	void m1(@Deprecated int p02) {
+	}
 
-  void local() {
-    class Local {
-      Local(@Deprecated int p31) { }
-      void m(@Deprecated int p32) { }
-    }
-  }
+	void local() {
+		class Local {
+			Local(@Deprecated int p31) {
+			}
+
+			void m(@Deprecated int p32) {
+			}
+		}
+	}
+
+	static class C2 {
+		C2(@Deprecated int p21) {
+		}
+
+		static void m2(@Deprecated int p23) {
+		}
+
+		void m1(@Deprecated int p22) {
+		}
+	}
+
+	class C1 {
+		C1(@Deprecated int p11) {
+		}
+
+		void m(@Deprecated int p12) {
+		}
+	}
 }

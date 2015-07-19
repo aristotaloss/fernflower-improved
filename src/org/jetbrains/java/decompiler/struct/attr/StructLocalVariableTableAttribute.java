@@ -35,33 +35,32 @@ import java.util.Map;
 */
 public class StructLocalVariableTableAttribute extends StructGeneralAttribute {
 
-  private Map<Integer, String> mapVarNames = Collections.emptyMap();
+	private Map<Integer, String> mapVarNames = Collections.emptyMap();
 
-  @Override
-  public void initContent(ConstantPool pool) throws IOException {
-    DataInputFullStream data = stream();
+	@Override
+	public void initContent(ConstantPool pool) throws IOException {
+		DataInputFullStream data = stream();
 
-    int len = data.readUnsignedShort();
-    if (len > 0) {
-      mapVarNames = new HashMap<Integer, String>(len);
-      for (int i = 0; i < len; i++) {
-        data.discard(4);
-        int nameIndex = data.readUnsignedShort();
-        data.discard(2);
-        int varIndex = data.readUnsignedShort();
-        mapVarNames.put(varIndex, pool.getPrimitiveConstant(nameIndex).getString());
-      }
-    }
-    else {
-      mapVarNames = Collections.emptyMap();
-    }
-  }
+		int len = data.readUnsignedShort();
+		if (len > 0) {
+			mapVarNames = new HashMap<Integer, String>(len);
+			for (int i = 0; i < len; i++) {
+				data.discard(4);
+				int nameIndex = data.readUnsignedShort();
+				data.discard(2);
+				int varIndex = data.readUnsignedShort();
+				mapVarNames.put(varIndex, pool.getPrimitiveConstant(nameIndex).getString());
+			}
+		} else {
+			mapVarNames = Collections.emptyMap();
+		}
+	}
 
-  public void addLocalVariableTable(StructLocalVariableTableAttribute attr) {
-    mapVarNames.putAll(attr.getMapVarNames());
-  }
+	public void addLocalVariableTable(StructLocalVariableTableAttribute attr) {
+		mapVarNames.putAll(attr.getMapVarNames());
+	}
 
-  public Map<Integer, String> getMapVarNames() {
-    return mapVarNames;
-  }
+	public Map<Integer, String> getMapVarNames() {
+		return mapVarNames;
+	}
 }

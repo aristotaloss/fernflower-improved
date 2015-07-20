@@ -47,31 +47,26 @@ import java.util.*;
 
 public class ClassWriter {
 
-	private static final String[] ANNOTATION_ATTRIBUTES = {
-			StructGeneralAttribute.ATTRIBUTE_RUNTIME_VISIBLE_ANNOTATIONS, StructGeneralAttribute.ATTRIBUTE_RUNTIME_INVISIBLE_ANNOTATIONS
+	private static final String[] ANNOTATION_ATTRIBUTES = { StructGeneralAttribute.ATTRIBUTE_RUNTIME_VISIBLE_ANNOTATIONS, StructGeneralAttribute.ATTRIBUTE_RUNTIME_INVISIBLE_ANNOTATIONS };
+	private static final String[] PARAMETER_ANNOTATION_ATTRIBUTES = { StructGeneralAttribute.ATTRIBUTE_RUNTIME_VISIBLE_PARAMETER_ANNOTATIONS, StructGeneralAttribute.ATTRIBUTE_RUNTIME_INVISIBLE_PARAMETER_ANNOTATIONS };
+	private static final Map<Integer, String> MODIFIERS = new LinkedHashMap<Integer, String>() {
+		{
+			put(CodeConstants.ACC_PUBLIC, "public");
+			put(CodeConstants.ACC_PROTECTED, "protected");
+			put(CodeConstants.ACC_PRIVATE, "private");
+			put(CodeConstants.ACC_ABSTRACT, "abstract");
+			put(CodeConstants.ACC_STATIC, "static");
+			put(CodeConstants.ACC_FINAL, "final");
+			put(CodeConstants.ACC_STRICT, "strictfp");
+			put(CodeConstants.ACC_TRANSIENT, "transient");
+			put(CodeConstants.ACC_VOLATILE, "volatile");
+			put(CodeConstants.ACC_SYNCHRONIZED, "synchronized");
+			put(CodeConstants.ACC_NATIVE, "native");
+		}
 	};
-	private static final String[] PARAMETER_ANNOTATION_ATTRIBUTES = {
-			StructGeneralAttribute.ATTRIBUTE_RUNTIME_VISIBLE_PARAMETER_ANNOTATIONS, StructGeneralAttribute.ATTRIBUTE_RUNTIME_INVISIBLE_PARAMETER_ANNOTATIONS
-	};
-	private static final Map<Integer, String> MODIFIERS = new LinkedHashMap<Integer, String>() {{
-		put(CodeConstants.ACC_PUBLIC, "public");
-		put(CodeConstants.ACC_PROTECTED, "protected");
-		put(CodeConstants.ACC_PRIVATE, "private");
-		put(CodeConstants.ACC_ABSTRACT, "abstract");
-		put(CodeConstants.ACC_STATIC, "static");
-		put(CodeConstants.ACC_FINAL, "final");
-		put(CodeConstants.ACC_STRICT, "strictfp");
-		put(CodeConstants.ACC_TRANSIENT, "transient");
-		put(CodeConstants.ACC_VOLATILE, "volatile");
-		put(CodeConstants.ACC_SYNCHRONIZED, "synchronized");
-		put(CodeConstants.ACC_NATIVE, "native");
-	}};
-	private static final int CLASS_ALLOWED = CodeConstants.ACC_PUBLIC | CodeConstants.ACC_PROTECTED | CodeConstants.ACC_PRIVATE | CodeConstants.ACC_ABSTRACT |
-			CodeConstants.ACC_STATIC | CodeConstants.ACC_FINAL | CodeConstants.ACC_STRICT;
-	private static final int FIELD_ALLOWED = CodeConstants.ACC_PUBLIC | CodeConstants.ACC_PROTECTED | CodeConstants.ACC_PRIVATE | CodeConstants.ACC_STATIC |
-			CodeConstants.ACC_FINAL | CodeConstants.ACC_TRANSIENT | CodeConstants.ACC_VOLATILE;
-	private static final int METHOD_ALLOWED = CodeConstants.ACC_PUBLIC | CodeConstants.ACC_PROTECTED | CodeConstants.ACC_PRIVATE | CodeConstants.ACC_ABSTRACT |
-			CodeConstants.ACC_STATIC | CodeConstants.ACC_FINAL | CodeConstants.ACC_SYNCHRONIZED | CodeConstants.ACC_NATIVE | CodeConstants.ACC_STRICT;
+	private static final int CLASS_ALLOWED = CodeConstants.ACC_PUBLIC | CodeConstants.ACC_PROTECTED | CodeConstants.ACC_PRIVATE | CodeConstants.ACC_ABSTRACT | CodeConstants.ACC_STATIC | CodeConstants.ACC_FINAL | CodeConstants.ACC_STRICT;
+	private static final int FIELD_ALLOWED = CodeConstants.ACC_PUBLIC | CodeConstants.ACC_PROTECTED | CodeConstants.ACC_PRIVATE | CodeConstants.ACC_STATIC | CodeConstants.ACC_FINAL | CodeConstants.ACC_TRANSIENT | CodeConstants.ACC_VOLATILE;
+	private static final int METHOD_ALLOWED = CodeConstants.ACC_PUBLIC | CodeConstants.ACC_PROTECTED | CodeConstants.ACC_PRIVATE | CodeConstants.ACC_ABSTRACT | CodeConstants.ACC_STATIC | CodeConstants.ACC_FINAL | CodeConstants.ACC_SYNCHRONIZED | CodeConstants.ACC_NATIVE | CodeConstants.ACC_STRICT;
 	private static final int CLASS_EXCLUDED = CodeConstants.ACC_ABSTRACT | CodeConstants.ACC_STATIC;
 	private static final int FIELD_EXCLUDED = CodeConstants.ACC_PUBLIC | CodeConstants.ACC_STATIC | CodeConstants.ACC_FINAL;
 	private static final int METHOD_EXCLUDED = CodeConstants.ACC_PUBLIC | CodeConstants.ACC_ABSTRACT;
@@ -125,7 +120,11 @@ public class ClassWriter {
 						buffer.append(" ");
 
 						String parameterName = methodWrapper.varproc.getVarName(new VarVersionPair(index, 0));
-						buffer.append(parameterName == null ? "param" + index : parameterName); // null iff decompiled with errors
+						buffer.append(parameterName == null ? "param" + index : parameterName); // null
+																								// iff
+																								// decompiled
+																								// with
+																								// errors
 
 						firstParameter = false;
 					}
@@ -253,33 +252,33 @@ public class ClassWriter {
 		buffer.append("// $FF: renamed from: ");
 
 		switch (type) {
-			case CLASS:
-				buffer.append(ExprProcessor.buildJavaClassName(oldName));
-				break;
+		case CLASS:
+			buffer.append(ExprProcessor.buildJavaClassName(oldName));
+			break;
 
-			case FIELD:
-				String[] fParts = oldName.split(" ");
-				FieldDescriptor fd = FieldDescriptor.parseDescriptor(fParts[2]);
-				buffer.append(fParts[1]);
-				buffer.append(' ');
-				buffer.append(getTypePrintOut(fd.type));
-				break;
+		case FIELD:
+			String[] fParts = oldName.split(" ");
+			FieldDescriptor fd = FieldDescriptor.parseDescriptor(fParts[2]);
+			buffer.append(fParts[1]);
+			buffer.append(' ');
+			buffer.append(getTypePrintOut(fd.type));
+			break;
 
-			default:
-				String[] mParts = oldName.split(" ");
-				MethodDescriptor md = MethodDescriptor.parseDescriptor(mParts[2]);
-				buffer.append(mParts[1]);
-				buffer.append(" (");
-				boolean first = true;
-				for (VarType paramType : md.params) {
-					if (!first) {
-						buffer.append(", ");
-					}
-					first = false;
-					buffer.append(getTypePrintOut(paramType));
+		default:
+			String[] mParts = oldName.split(" ");
+			MethodDescriptor md = MethodDescriptor.parseDescriptor(mParts[2]);
+			buffer.append(mParts[1]);
+			buffer.append(" (");
+			boolean first = true;
+			for (VarType paramType : md.params) {
+				if (!first) {
+					buffer.append(", ");
 				}
-				buffer.append(") ");
-				buffer.append(getTypePrintOut(md.ret));
+				first = false;
+				buffer.append(getTypePrintOut(paramType));
+			}
+			buffer.append(") ");
+			buffer.append(getTypePrintOut(md.ret));
 		}
 
 		buffer.appendLineSeparator();
@@ -299,7 +298,12 @@ public class ClassWriter {
 
 	private static void appendAnnotations(TextBuffer buffer, StructMember mb, int indent) {
 
-		BytecodeMappingTracer tracer_dummy = new BytecodeMappingTracer(); // FIXME: replace with a real one
+		BytecodeMappingTracer tracer_dummy = new BytecodeMappingTracer(); // FIXME:
+																			// replace
+																			// with
+																			// a
+																			// real
+																			// one
 
 		for (String name : ANNOTATION_ATTRIBUTES) {
 			StructAnnotationAttribute attribute = (StructAnnotationAttribute) mb.getAttributes().getWithKey(name);
@@ -313,7 +317,12 @@ public class ClassWriter {
 
 	private static void appendParameterAnnotations(TextBuffer buffer, StructMethod mt, int param) {
 
-		BytecodeMappingTracer tracer_dummy = new BytecodeMappingTracer(); // FIXME: replace with a real one
+		BytecodeMappingTracer tracer_dummy = new BytecodeMappingTracer(); // FIXME:
+																			// replace
+																			// with
+																			// a
+																			// real
+																			// one
 
 		for (String name : PARAMETER_ANNOTATION_ATTRIBUTES) {
 			StructAnnotationParameterAttribute attribute = (StructAnnotationParameterAttribute) mt.getAttributes().getWithKey(name);
@@ -433,7 +442,11 @@ public class ClassWriter {
 							}
 
 							String parameterName = methodWrapper.varproc.getVarName(new VarVersionPair(index, 0));
-							buffer.append(parameterName == null ? "param" + index : parameterName); // null iff decompiled with errors
+							buffer.append(parameterName == null ? "param" + index : parameterName); // null
+																									// iff
+																									// decompiled
+																									// with
+																									// errors
 
 							firstParameter = false;
 						}
@@ -480,8 +493,13 @@ public class ClassWriter {
 			int start_class_def = buffer.length();
 			writeClassDefinition(node, buffer, indent);
 
-//      // count lines in class definition the easiest way
-//      startLine = buffer.substring(start_class_def).toString().split(lineSeparator, -1).length - 1;
+			// // count lines in class definition the easiest way
+			// startLine =
+			// buffer.substring(start_class_def).toString().split(lineSeparator,
+			// -1).length - 1;
+
+			buffer.appendLineSeparator();
+			startLine++;
 
 			boolean hasContent = false;
 
@@ -511,9 +529,12 @@ public class ClassWriter {
 					enumFields = false;
 				}
 
-				//System.out.println(field.getName());
+				// System.out.println(field.getName());
 
-				fieldToJava(wrapper, cl, field, buffer, indent + 1, dummy_tracer); // FIXME: insert real tracer
+				fieldToJava(wrapper, cl, field, buffer, indent + 1, dummy_tracer); // FIXME:
+																					// insert
+																					// real
+																					// tracer
 
 				hasContent = true;
 			}
@@ -528,9 +549,7 @@ public class ClassWriter {
 
 			// methods
 			for (StructMethod mt : cl.getMethods()) {
-				boolean hide = mt.isSynthetic() && DecompilerContext.getOption(IFernflowerPreferences.REMOVE_SYNTHETIC) ||
-						mt.hasModifier(CodeConstants.ACC_BRIDGE) && DecompilerContext.getOption(IFernflowerPreferences.REMOVE_BRIDGE) ||
-						wrapper.getHiddenMembers().contains(InterpreterUtil.makeUniqueKey(mt.getName(), mt.getDescriptor()));
+				boolean hide = mt.isSynthetic() && DecompilerContext.getOption(IFernflowerPreferences.REMOVE_SYNTHETIC) || mt.hasModifier(CodeConstants.ACC_BRIDGE) && DecompilerContext.getOption(IFernflowerPreferences.REMOVE_BRIDGE) || wrapper.getHiddenMembers().contains(InterpreterUtil.makeUniqueKey(mt.getName(), mt.getDescriptor()));
 				if (hide) {
 					continue;
 				}
@@ -575,6 +594,9 @@ public class ClassWriter {
 				}
 			}
 
+			buffer.appendLineSeparator();
+			startLine++;
+			
 			buffer.appendIndent(indent).append('}');
 
 			if (node.type != ClassNode.CLASS_ANONYMOUS) {
@@ -752,7 +774,8 @@ public class ClassWriter {
 				buffer.append(nexpr.toJava(indent, tracer));
 			} else {
 				buffer.append(" = ");
-				// FIXME: special case field initializer. Can map to more than one method (constructor) and bytecode intruction.
+				// FIXME: special case field initializer. Can map to more than
+				// one method (constructor) and bytecode intruction.
 				buffer.append(initializer.toJava(indent, tracer));
 			}
 		} else if (field.hasModifier(CodeConstants.ACC_FINAL) && field.hasModifier(CodeConstants.ACC_STATIC)) {
@@ -792,10 +815,14 @@ public class ClassWriter {
 
 			int flags = mt.getAccessFlags();
 			if ((flags & CodeConstants.ACC_NATIVE) != 0) {
-				flags &= ~CodeConstants.ACC_STRICT; // compiler bug: a strictfp class sets all methods to strictfp
+				flags &= ~CodeConstants.ACC_STRICT; // compiler bug: a strictfp
+													// class sets all methods to
+													// strictfp
 			}
 			if (CodeConstants.CLINIT_NAME.equals(mt.getName())) {
-				flags &= CodeConstants.ACC_STATIC; // ignore all modifiers except 'static' in a static initializer
+				flags &= CodeConstants.ACC_STATIC; // ignore all modifiers
+													// except 'static' in a
+													// static initializer
 			}
 
 			if (isDeprecated) {
@@ -958,7 +985,11 @@ public class ClassWriter {
 
 						buffer.append(' ');
 						String parameterName = methodWrapper.varproc.getVarName(new VarVersionPair(index, 0));
-						buffer.append(parameterName == null ? "param" + index : parameterName); // null iff decompiled with errors
+						buffer.append(parameterName == null ? "param" + index : parameterName); // null
+																								// iff
+																								// decompiled
+																								// with
+																								// errors
 
 						firstParameter = false;
 						paramCount++;
@@ -991,12 +1022,19 @@ public class ClassWriter {
 
 			tracer.incrementCurrentSourceLine(buffer.countLines(start_index_method));
 
-			if ((flags & (CodeConstants.ACC_ABSTRACT | CodeConstants.ACC_NATIVE)) != 0) { // native or abstract method (explicit or interface)
+			if ((flags & (CodeConstants.ACC_ABSTRACT | CodeConstants.ACC_NATIVE)) != 0) { // native
+																							// or
+																							// abstract
+																							// method
+																							// (explicit
+																							// or
+																							// interface)
 				if (isAnnotation) {
 					StructAnnDefaultAttribute attr = (StructAnnDefaultAttribute) mt.getAttributes().getWithKey("AnnotationDefault");
 					if (attr != null) {
 						buffer.append(" default ");
-						buffer.append(attr.getDefaultValue().toJava(indent + 1, new BytecodeMappingTracer())); // dummy tracer
+						buffer.append(attr.getDefaultValue().toJava(indent + 1, new BytecodeMappingTracer())); // dummy
+																												// tracer
 					}
 				}
 
@@ -1008,7 +1046,8 @@ public class ClassWriter {
 					buffer.append(' ');
 				}
 
-				// We do not have line information for method start, lets have it here for now
+				// We do not have line information for method start, lets have
+				// it here for now
 				StructLineNumberTableAttribute lineNumberTable = (StructLineNumberTableAttribute) mt.getAttributes().getWithKey(StructGeneralAttribute.ATTRIBUTE_LINE_NUMBER_TABLE);
 				if (lineNumberTable != null && DecompilerContext.getOption(IFernflowerPreferences.USE_DEBUG_LINE_NUMBERS)) {
 					buffer.setCurrentLine(lineNumberTable.getFirstLine() - 1);
@@ -1018,7 +1057,9 @@ public class ClassWriter {
 
 				RootStatement root = wrapper.getMethodWrapper(mt.getName(), mt.getDescriptor()).root;
 
-				if (root != null && !methodWrapper.decompiledWithErrors) { // check for existence
+				if (root != null && !methodWrapper.decompiledWithErrors) { // check
+																			// for
+																			// existence
 					try {
 						int startLine = tracer.getCurrentSourceLine();
 
@@ -1056,14 +1097,12 @@ public class ClassWriter {
 
 		// save total lines
 		// TODO: optimize
-		//tracer.setCurrentSourceLine(buffer.countLines(start_index_method));
+		// tracer.setCurrentSourceLine(buffer.countLines(start_index_method));
 
 		return !hideMethod;
 	}
 
 	private enum MType {
-		CLASS,
-		FIELD,
-		METHOD
+		CLASS, FIELD, METHOD
 	}
 }

@@ -14,7 +14,8 @@ Changes include:
  - Current FernFlower (well, at the time of writing) has a bug where some literals were output as '&eacute;&euro;' because the literal was printed as a char, which gave really messy code. I changed this bit to print the literal integer value.
  - In if-statements, FernFlower will format `if (7 == obj)` to `if (obj == 7)` (completely personal preference).
  - Added the option to order fields by their initialization order using the `fdo` argument.
-
+ - Extract your decompiled jars using the `-ext=1` argument (By default FernFlower does NOT extract).
+ 
 # License
 
 http://www.apache.org/licenses/LICENSE-2.0
@@ -46,6 +47,7 @@ With the exception of mpm and urc the value of 1 means the option is activated, 
 Typically, the following options will be changed by user, if any: hes, hdc, dgs, mpm, ren, urc The rest of options can be left as they are: they are aimed at professional reverse engineers.
 
  - fdo (1): order fields by their initialization order
+ - ext (0): extract decompiled files
  - rbr (1): hide bridge methods
  - rsy (0): hide synthetic class members
  - din (1): decompile inner classes

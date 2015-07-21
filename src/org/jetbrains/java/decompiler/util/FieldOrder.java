@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Created by Jonathan on 7/19/2015.
+ * Created by Jonathan Beaudoin on 7/19/2015.
  */
 public final class FieldOrder {
 

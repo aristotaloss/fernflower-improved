@@ -40,10 +40,12 @@ public class ConsoleDecompiler implements IBytecodeProvider, IResultSaver {
 	// *******************************************************************
 	private final Map<String, ZipOutputStream> mapArchiveStreams = new HashMap<String, ZipOutputStream>();
 	private final Map<String, Set<String>> mapArchiveEntries = new HashMap<String, Set<String>>();
+
 	@SuppressWarnings("UseOfSystemOutOrSystemErr")
 	public ConsoleDecompiler(File destination, Map<String, Object> options) {
 		this(destination, options, new PrintStreamLogger(System.out));
 	}
+
 	protected ConsoleDecompiler(File destination, Map<String, Object> options, IFernflowerLogger logger) {
 		root = destination;
 		fernflower = new Fernflower(this, this, options, logger);
@@ -160,6 +162,7 @@ public class ConsoleDecompiler implements IBytecodeProvider, IResultSaver {
 	private String getAbsolutePath(String path) {
 		return new File(root, path).getAbsolutePath();
 	}
+
 
 	@Override
 	public void saveFolder(String path) {
@@ -285,5 +288,10 @@ public class ConsoleDecompiler implements IBytecodeProvider, IResultSaver {
 		} catch (IOException ex) {
 			DecompilerContext.getLogger().writeMessage("Cannot close " + file, IFernflowerLogger.Severity.WARN);
 		}
+	}
+
+	@Override
+	public File root() {
+		return root;
 	}
 }

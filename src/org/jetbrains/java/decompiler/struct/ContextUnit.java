@@ -21,7 +21,9 @@ import org.jetbrains.java.decompiler.main.extern.IResultSaver;
 import org.jetbrains.java.decompiler.struct.lazy.LazyLoader;
 import org.jetbrains.java.decompiler.struct.lazy.LazyLoader.Link;
 import org.jetbrains.java.decompiler.util.DataInputFullStream;
+import org.jetbrains.java.decompiler.util.FileUtilities;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -151,8 +153,12 @@ public class ContextUnit {
 						resultSaver.saveClassEntry(archivePath, filename, cl.qualifiedName, entryName, content);
 					}
 				}
-
 				resultSaver.closeArchive(archivePath, filename);
+
+				if (DecompilerContext.getOption(IFernflowerPreferences.EXTRACT_FILES)) {
+					File out = new File(resultSaver.root(), filename);
+					FileUtilities.extract(out, resultSaver.root());
+				}
 		}
 	}
 

@@ -55,7 +55,8 @@ public interface IFernflowerPreferences {
 	String BANNER = "ban";
 
 	String FIELD_DECLARATION_ORDER = "fdo";
-
+	String EXTRACT_FILES = "ext";
+	
 	String DUMP_ORIGINAL_LINES = "__dump_original_lines__";
 	String UNIT_TEST_MODE = "__unit_test_mode__";
 
@@ -97,5 +98,6 @@ public interface IFernflowerPreferences {
 		put(DUMP_ORIGINAL_LINES, "0");
 
 		put(FIELD_DECLARATION_ORDER, "1");
+		put(EXTRACT_FILES, "0");
 	}});
 }

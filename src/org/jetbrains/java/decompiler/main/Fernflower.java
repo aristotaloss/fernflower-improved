@@ -52,6 +52,8 @@ public class Fernflower implements IDecompiledData {
 		DecompilerContext.setStructContext(structContext);
 
 		structContext.saveContext();
+
+
 	}
 
 	public void clearContext() {

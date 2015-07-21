@@ -15,6 +15,7 @@
  */
 package org.jetbrains.java.decompiler.main.extern;
 
+import java.io.File;
 import java.util.jar.Manifest;
 
 public interface IResultSaver {
@@ -33,4 +34,6 @@ public interface IResultSaver {
 	void saveClassEntry(String path, String archiveName, String qualifiedName, String entryName, String content);
 
 	void closeArchive(String path, String archiveName);
+
+	File root();
 }

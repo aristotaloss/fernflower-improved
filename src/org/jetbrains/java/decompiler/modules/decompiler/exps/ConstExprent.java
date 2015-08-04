@@ -179,9 +179,11 @@ public class ConstExprent extends Exprent {
 					if (ret == null) {
 						char c = (char) val.intValue();
 
-						if (val > 256 || val < 0) {
+/*						if (val > 256 || val < 0) {
+							System.out.println("l0l u wot?");
 							return new TextBuffer(val + "");
 						}
+*/
 
 						if (c >= 32 && c < 127 || !ascii && InterpreterUtil.isPrintableUnicode(c)) {
 							ret = String.valueOf(c);
@@ -256,11 +258,11 @@ public class ConstExprent extends Exprent {
 					String floatfield;
 					if (literal) {
 						if (Double.isNaN(fval)) {
-							return new TextBuffer("0.0F / 0.0");
+							return new TextBuffer("0.0F / 0.0F");
 						} else if (fval == Double.POSITIVE_INFINITY) {
-							return new TextBuffer("1.0F / 0.0");
+							return new TextBuffer("1.0F / 0.0F");
 						} else if (fval == Double.NEGATIVE_INFINITY) {
-							return new TextBuffer("-1.0F / 0.0");
+							return new TextBuffer("-1.0F / 0.0F");
 						} else {
 							return new TextBuffer(value.toString()).append("F");
 						}

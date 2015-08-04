@@ -370,7 +370,6 @@ public class ExprProcessor implements CodeConstants {
 
 			res.prepend("(" + getCastTypeName(leftType) + ")");
 		}
-
 		buffer.append(res);
 
 		return cast;

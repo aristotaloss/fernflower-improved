@@ -25,7 +25,8 @@ public enum TestEnum {
 		@Override
 		public void m() {
 		}
-	};
+	},
+	E5;
 
 	private String s;
 

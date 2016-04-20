@@ -165,7 +165,7 @@ public class StructClass extends StructMember {
 	}
 
 	public VBStyleCollection<StructField, String> getFields() {
-		if (DecompilerContext.getOption(IFernflowerPreferences.FIELD_DECLARATION_ORDER)) {
+		if (DecompilerContext.getOption(IFernflowerPreferences.FIELD_DECLARATION_ORDER) && !hasModifier(CodeConstants.ACC_ENUM)) {
 			//TODO improve the logic behind this?
 			List<String> fieldOrder = FieldOrder.forClass(this);
 			if (fieldOrder == null) {

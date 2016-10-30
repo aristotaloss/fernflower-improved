@@ -44,4 +44,17 @@ public class VarNamesCollector {
 		usedNames.add(proposition);
 		return proposition;
 	}
+
+	public String getFreeName_(String proposition) {
+		int ptr = 1;
+		if (usedNames.contains(proposition)) {
+			while (usedNames.contains(proposition + "_" + ptr)) {
+				ptr++;
+			}
+			proposition += "_" + ptr;
+		}
+		usedNames.add(proposition);
+		return proposition;
+	}
+
 }

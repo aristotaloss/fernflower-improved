@@ -106,11 +106,8 @@ public class VarExprent extends Exprent {
 				}
 				buffer.append(ExprProcessor.getCastTypeName(getVarType())).append(" ");
 			}
-			buffer.append(name == null ? ("var" + index + (version == 0 ? "" : "_" + version)) : name);
 
-			if (name != null && name.equals("i_20_")) {
-				//exception.printStackTrace();
-			}
+			buffer.append(name == null ? ("var" + index + (version == 0 ? "" : "_" + version)) : name);
 		}
 
 		return buffer;

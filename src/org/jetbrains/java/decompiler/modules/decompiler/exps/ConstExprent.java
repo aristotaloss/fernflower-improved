@@ -179,12 +179,6 @@ public class ConstExprent extends Exprent {
 					if (ret == null) {
 						char c = (char) val.intValue();
 
-/*						if (val > 256 || val < 0) {
-							System.out.println("l0l u wot?");
-							return new TextBuffer(val + "");
-						}
-*/
-
 						if (c >= 32 && c < 127 || !ascii && InterpreterUtil.isPrintableUnicode(c)) {
 							ret = String.valueOf(c);
 						} else {

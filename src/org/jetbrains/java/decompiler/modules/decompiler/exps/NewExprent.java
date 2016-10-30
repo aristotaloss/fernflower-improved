@@ -392,7 +392,7 @@ public class NewExprent extends Exprent {
 					}
 
 					VarType leftType = newType.decreaseArrayDim();
-					buf.append("{");
+					buf.append(" {");
 					for (int i = 0; i < lstArrayElements.size(); i++) {
 						if (i > 0) {
 							buf.append(", ");

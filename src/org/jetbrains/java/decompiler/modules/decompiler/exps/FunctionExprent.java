@@ -449,14 +449,14 @@ public class FunctionExprent extends Exprent {
 			case FUNCTION_NEG:
 				return wrapOperandString(lstOperands.get(0), true, indent, tracer).prepend("-");
 			case FUNCTION_CAST:
-				return lstOperands.get(1).toJava(indent, tracer).enclose("(", ")").append(wrapOperandString(lstOperands.get(0), true, indent, tracer));
+				return lstOperands.get(1).toJava(indent, tracer).enclose("(", ") ").append(wrapOperandString(lstOperands.get(0), true, indent, tracer));
 			case FUNCTION_ARRAY_LENGTH:
 				Exprent arr = lstOperands.get(0);
 
 				TextBuffer res = wrapOperandString(arr, false, indent, tracer);
 				if (arr.getExprType().arrayDim == 0) {
 					VarType objArr = VarType.VARTYPE_OBJECT.resizeArrayDim(1); // type family does not change
-					res.enclose("((" + ExprProcessor.getCastTypeName(objArr) + ")", ")");
+					res.enclose("((" + ExprProcessor.getCastTypeName(objArr) + ") ", ")");
 				}
 				return res.append(".length");
 			case FUNCTION_IIF:

@@ -239,10 +239,10 @@ public class InvocationExprent extends Exprent {
 					VarType leftType = new VarType(CodeConstants.TYPE_OBJECT, 0, classname);
 
 					if (rightType.equals(VarType.VARTYPE_OBJECT) && !leftType.equals(rightType)) {
-						buf.append("((").append(ExprProcessor.getCastTypeName(leftType)).append(")");
+						buf.append("((").append(ExprProcessor.getCastTypeName(leftType)).append(") ");
 
 						if (instance.getPrecedence() >= FunctionExprent.getPrecedence(FunctionExprent.FUNCTION_CAST)) {
-							res.enclose("(", ")");
+							res.enclose("(", ") ");
 						}
 						buf.append(res).append(")");
 					} else if (instance.getPrecedence() > getPrecedence()) {

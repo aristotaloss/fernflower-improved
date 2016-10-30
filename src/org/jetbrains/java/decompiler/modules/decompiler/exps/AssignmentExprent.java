@@ -141,10 +141,10 @@ public class AssignmentExprent extends Exprent {
 				!leftType.isSuperset(rightType) &&
 				(rightType.equals(VarType.VARTYPE_OBJECT) || leftType.type != CodeConstants.TYPE_OBJECT)) {
 			if (right.getPrecedence() >= FunctionExprent.getPrecedence(FunctionExprent.FUNCTION_CAST)) {
-				res.enclose("(", ")");
+				res.enclose("(", ") ");
 			}
 
-			res.prepend("(" + ExprProcessor.getCastTypeName(leftType) + ")");
+			res.prepend("(" + ExprProcessor.getCastTypeName(leftType) + ") ");
 		}
 
 		buffer.append(condType == CONDITION_NONE ? " = " : OPERATORS[condType]).append(res);

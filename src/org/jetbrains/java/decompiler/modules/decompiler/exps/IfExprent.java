@@ -111,7 +111,7 @@ public class IfExprent extends Exprent {
 	@Override
 	public TextBuffer toJava(int indent, BytecodeMappingTracer tracer) {
 		tracer.addMapping(bytecode);
-		return condition.toJava(indent, tracer).enclose("if(", ")");
+		return condition.toJava(indent, tracer).enclose("if (", ")");
 	}
 
 	@Override

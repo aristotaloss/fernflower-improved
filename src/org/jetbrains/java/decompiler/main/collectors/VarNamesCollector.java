@@ -18,6 +18,9 @@ package org.jetbrains.java.decompiler.main.collectors;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.jetbrains.java.decompiler.code.CodeConstants;
+import org.jetbrains.java.decompiler.struct.gen.VarType;
+
 public class VarNamesCollector {
 
 	private final Set<String> usedNames = new HashSet<String>();
@@ -55,6 +58,34 @@ public class VarNamesCollector {
 		}
 		usedNames.add(proposition);
 		return proposition;
+	}
+	
+	public String varTypeToName(VarType varType, int index) {
+		String name = "var";
+		String arrayname = "arr";
+		switch (varType.type) {
+		case CodeConstants.TYPE_INT: name = "i"; arrayname = "ints"; break;
+		case CodeConstants.TYPE_BOOLEAN: name = "bool"; arrayname = "bools"; break;
+		case CodeConstants.TYPE_BYTE: name = "b"; arrayname = "bytes"; break;
+		case CodeConstants.TYPE_FLOAT: name = "f"; arrayname = "floats"; break;
+		case CodeConstants.TYPE_SHORT: name = "s"; arrayname = "shorts"; break;
+		case CodeConstants.TYPE_DOUBLE: name = "d"; arrayname = "doubles"; break;
+		case CodeConstants.TYPE_LONG: name = "long"; arrayname = "longs"; break;
+		case CodeConstants.TYPE_OBJECT:
+			if (varType == VarType.VARTYPE_STRING) {
+				name = "str"; arrayname = "strings";
+			} else if (varType == VarType.VARTYPE_OBJECT) {
+				name = "obj"; arrayname = "objects";
+			} else {
+				name = varType.value.toLowerCase();
+
+				if (name.contains("/")) {
+					name = name.substring(name.lastIndexOf('/') + 1);
+				}
+			}
+			return getFreeName_(varType.arrayDim > 0 ? arrayname : name);
+		}
+		return getFreeName(varType.arrayDim > 0 ? arrayname : (name + "_" + index));
 	}
 
 }

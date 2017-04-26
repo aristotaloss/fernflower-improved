@@ -15,9 +15,17 @@
  */
 package org.jetbrains.java.decompiler.modules.decompiler.vars;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map.Entry;
+import java.util.Set;
+
 import org.jetbrains.java.decompiler.code.CodeConstants;
 import org.jetbrains.java.decompiler.main.DecompilerContext;
-import org.jetbrains.java.decompiler.main.collectors.BytecodeMappingTracer;
 import org.jetbrains.java.decompiler.main.collectors.VarNamesCollector;
 import org.jetbrains.java.decompiler.modules.decompiler.exps.AssignmentExprent;
 import org.jetbrains.java.decompiler.modules.decompiler.exps.Exprent;
@@ -29,10 +37,6 @@ import org.jetbrains.java.decompiler.modules.decompiler.stats.Statement;
 import org.jetbrains.java.decompiler.struct.StructClass;
 import org.jetbrains.java.decompiler.struct.StructMethod;
 import org.jetbrains.java.decompiler.struct.gen.MethodDescriptor;
-import org.jetbrains.java.decompiler.struct.gen.VarType;
-
-import java.util.*;
-import java.util.Map.Entry;
 
 public class VarDefinitionHelper {
 
@@ -70,11 +74,9 @@ public class VarDefinitionHelper {
 		int varindex = 0;
 		for (int i = 0; i < paramcount; i++) {
 			implDefVars.add(varindex);
-
-			if (!thisvar || i > 0) {
-				String name = varTypeToName(md.params[varindex - (thisvar ? 1 : 0)], varindex, vc);
-				varproc.setVarName(new VarVersionPair(varindex, 0), name);
-			}
+			
+			VarVersionPair vvp = new VarVersionPair(varindex, 0);
+			varproc.setVarName(vvp, vc.varTypeToName(varproc.getVarType(vvp), varindex));
 
 			if (thisvar) {
 				if (i == 0) {
@@ -112,7 +114,7 @@ public class VarDefinitionHelper {
 			if (lstVars != null) {
 				for (VarExprent var : lstVars) {
 					implDefVars.add(var.getIndex());
-					varproc.setVarName(new VarVersionPair(var), varTypeToName(var.getVarType(), var.getIndex(), vc));
+					varproc.setVarName(new VarVersionPair(var), vc.varTypeToName(var.getVarType(), var.getIndex()));
 					var.setDefinition(true);
 				}
 			}
@@ -175,7 +177,8 @@ public class VarDefinitionHelper {
 				continue;
 			}
 
-			varproc.setVarName(new VarVersionPair(index.intValue(), 0), vc.getFreeName(index));
+			VarVersionPair vvp = new VarVersionPair(index.intValue(), 0);
+			varproc.setVarName(vvp, vc.varTypeToName(varproc.getVarType(vvp), index));
 
 			// special case for
 			if (stat.type == Statement.TYPE_DO) {
@@ -232,51 +235,13 @@ public class VarDefinitionHelper {
 				addindex++;
 			}
 
-			VarType varType = varproc.getVarType(new VarVersionPair(index.intValue(), 0));
-
-			// Determine a proper name for this variable:
-			varproc.setVarName(new VarVersionPair(index.intValue(), 0), varTypeToName(varType, index, vc));
-
 			if (!defset) {
-				VarExprent var = new VarExprent(index.intValue(), varType, varproc);
+				VarExprent var = new VarExprent(index.intValue(), varproc.getVarType(new VarVersionPair(index.intValue(), 0)), varproc);
 				var.setDefinition(true);
 
 				lst.add(addindex, var);
 			}
 		}
-	}
-
-	private static String varTypeToName(VarType varType, int index, VarNamesCollector vc) {
-		if (varType.type == CodeConstants.TYPE_INT) {
-			return vc.getFreeName("int_" + index);
-		} else if (varType.type == CodeConstants.TYPE_BOOLEAN) {
-			return vc.getFreeName("bool_" + index);
-		} else if (varType.type == CodeConstants.TYPE_BYTE) {
-			return vc.getFreeName("byte_" + index);
-		} else if (varType.type == CodeConstants.TYPE_CHAR) {
-			return vc.getFreeName("char_" + index);
-		} else if (varType.type == CodeConstants.TYPE_FLOAT) {
-			return vc.getFreeName("float_" + index);
-		} else if (varType == VarType.VARTYPE_STRING) {
-			return vc.getFreeName("string_" + index);
-		} else if (varType.type == CodeConstants.TYPE_SHORT) {
-			return vc.getFreeName("short_" + index);
-		} else if (varType.type == CodeConstants.TYPE_DOUBLE) {
-			return vc.getFreeName("double_" + index);
-		} else if (varType.type == CodeConstants.TYPE_LONG) {
-			return vc.getFreeName("long_" + index);
-		} else if (varType.type == CodeConstants.TYPE_OBJECT) {
-			String cname = varType.value;
-
-			if (cname.contains("/")) {
-				cname = cname.substring(cname.lastIndexOf('/') + 1);
-			}
-
-			cname = Character.toLowerCase(cname.charAt(0)) + cname.substring(1);
-			return vc.getFreeName_(cname);
-		}
-
-		return vc.getFreeName("var_" + index);
 	}
 
 	private Statement findFirstBlock(Statement stat, Integer varindex) {

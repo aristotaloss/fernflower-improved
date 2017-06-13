@@ -15,6 +15,13 @@
  */
 package org.jetbrains.java.decompiler.modules.decompiler.exps;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+
 import org.jetbrains.java.decompiler.code.CodeConstants;
 import org.jetbrains.java.decompiler.main.DecompilerContext;
 import org.jetbrains.java.decompiler.main.TextBuffer;
@@ -27,9 +34,6 @@ import org.jetbrains.java.decompiler.struct.match.MatchEngine;
 import org.jetbrains.java.decompiler.struct.match.MatchNode;
 import org.jetbrains.java.decompiler.struct.match.MatchNode.RuleValue;
 import org.jetbrains.java.decompiler.util.InterpreterUtil;
-
-import java.util.*;
-import java.util.Map.Entry;
 
 public class ConstExprent extends Exprent {
 	private static final Map<Integer, String> ESCAPES = new HashMap<Integer, String>() {{
@@ -77,8 +81,8 @@ public class ConstExprent extends Exprent {
 			return VarType.VARTYPE_SHORTCHAR;
 		} else if (-32768 <= val && val <= 32767) {
 			return VarType.VARTYPE_SHORT;
-		} else if (0 <= val && val <= 0xFFFF) {
-			return VarType.VARTYPE_CHAR;
+//		} else if (0 <= val && val <= 0xFFFF) {
+//			return VarType.VARTYPE_CHAR;
 		} else {
 			return VarType.VARTYPE_INT;
 		}
@@ -162,10 +166,34 @@ public class ConstExprent extends Exprent {
 
 	@Override
 	public TextBuffer toJava(int indent, BytecodeMappingTracer tracer) {
+		return toJava(indent, tracer, false);
+	}
+
+	@Override
+	public TextBuffer toJava(int indent, BytecodeMappingTracer tracer, boolean bitwiseOp) {
 		boolean literal = DecompilerContext.getOption(IFernflowerPreferences.LITERALS_AS_IS);
 		boolean ascii = DecompilerContext.getOption(IFernflowerPreferences.ASCII_STRING_CHARACTERS);
 
 		tracer.addMapping(bytecode);
+		
+		if (bitwiseOp) {
+			TextBuffer tb = new TextBuffer();
+			if (getValue() instanceof Long) {
+				long value = (long) getValue();
+				if (value < 0) {
+					tb.append('~');
+					value = ~value;
+				}
+				return tb.append("0x").append(Long.toHexString(value)).append('L');
+			} else {
+				int value = (int) getValue();
+				if (value < 0) {
+					tb.append('~');
+					value = ~value;
+				}
+				return tb.append("0x").append(Integer.toHexString(value));
+			}
+		}
 
 		if (constType.type != CodeConstants.TYPE_NULL && value == null) {
 			return new TextBuffer(ExprProcessor.getCastTypeName(constType));

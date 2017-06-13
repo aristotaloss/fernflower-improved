@@ -83,9 +83,8 @@ public class VarNamesCollector {
 					name = name.substring(name.lastIndexOf('/') + 1);
 				}
 			}
-			return getFreeName_(varType.arrayDim > 0 ? arrayname : name);
 		}
-		return getFreeName(varType.arrayDim > 0 ? arrayname : (name + "_" + index));
+		return getFreeName((varType.arrayDim > 0 ? arrayname : name) + "_" + index);
 	}
 
 }
